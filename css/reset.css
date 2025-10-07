@@ -1,0 +1,221 @@
+/* reset.css — opinionated modern CSS reset
+   - Minimal, mobile-friendly, and sensible defaults
+   - Place this at the very top of your main stylesheet (before component styles)
+*/
+
+/* Box sizing
+   Make sizing predictable by using border-box everywhere */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Remove default margins and paddings from common elements */
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  vertical-align: baseline;
+}
+
+/* Set sensible defaults for html & body */
+html {
+  line-height: 1.15; /* improve readability */
+  -webkit-text-size-adjust: 100%; /* prevent font scaling on mobile */
+}
+
+body {
+  min-height: 100vh;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #ffffff;
+  color: #111;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial;
+}
+
+/* Make images and media scale nicely */
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Remove list styles for ul/ol by default */
+ul,
+ol {
+  list-style: none;
+}
+
+/* Links — inherit color & remove underline by default */
+a {
+  background-color: transparent;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Forms: make inputs, buttons and selects inherit font and align baseline */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+/* Buttons — be accessible and reset appearance */
+button {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+/* Ensure disabled controls look disabled */
+[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Tables: collapse borders */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* Headings: inherit font-weight and line-height can be set in components */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/* Preserve white-space for preformatted text */
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Accessibility: make focus states visible (developer can customize later) */
+:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Utility tiny helpers (optional) */
+.hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important; /* added to prevent the text from wrapping */
+  border: 0 !important;
+}
+
+/* End of reset.css */

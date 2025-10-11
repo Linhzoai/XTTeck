@@ -297,6 +297,10 @@ while ($row = $revenue_by_month->fetch_assoc()) {
             <div class="user-avatar">
                 <?php echo strtoupper(substr($_SESSION['admin_user'], 0, 1)); ?>
             </div>
+            <a href="doimk.php" class="btn btn-primary">
+                <i class="fas fa-key me-2"></i> Đổi mật khẩu
+            </a>
+
             <a href="logout.php" class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i> Đăng xuất
             </a>

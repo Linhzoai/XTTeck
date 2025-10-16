@@ -6,7 +6,7 @@ if (!isset($_SESSION['cart_session_id'])) {
     $_SESSION['cart_session_id'] = session_id();
 }
 
-$conn = new mysqli("localhost", "root", "", "xttech");
+require_once 'config.php';
 if ($conn->connect_error) die("Kết nối thất bại: " . $conn->connect_error);
 
 // Nếu có POST từ form đặt hàng, thêm vào giỏ

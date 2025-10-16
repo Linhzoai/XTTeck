@@ -5,10 +5,7 @@ if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] != 1) {
     exit;
 }
 
-$conn = new mysqli("localhost", "root", "", "xttech");
-if ($conn->connect_error) die("Kết nối thất bại");
-$conn->set_charset("utf8mb4");
-
+require_once 'config.php';
 $message = '';
 
 // Xử lý xóa sản phẩm

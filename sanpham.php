@@ -1,10 +1,6 @@
 <?php
 // Kết nối CSDL
-$conn = new mysqli("localhost", "root", "", "xttech");
-if ($conn->connect_error) {
-    die("Kết nối thất bại: " . $conn->connect_error);
-}
-$conn->set_charset("utf8mb4");
+require_once 'config.php';
 
 // Lấy danh mục cho bộ lọc
 $dm_result = $conn->query("SELECT * FROM danhmuc");

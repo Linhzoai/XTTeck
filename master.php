@@ -7,9 +7,7 @@ if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] != 1) {
     exit;
 }
 
-$conn = new mysqli("localhost", "root", "", "xttech");
-if ($conn->connect_error) die("Kết nối thất bại: " . $conn->connect_error);
-$conn->set_charset("utf8mb4");
+require_once 'config.php';
 
 // Thống kê tổng quan
 $total_products = $conn->query("SELECT COUNT(*) as total FROM sanpham")->fetch_assoc()['total'];

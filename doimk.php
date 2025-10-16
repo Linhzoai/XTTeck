@@ -8,12 +8,7 @@ if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] != 1) {
 }
 
 // Kết nối database (sửa lại theo cấu hình của bạn)
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "xttech";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
+require_once 'config.php';
 if ($conn->connect_error) {
     die("Kết nối thất bại: " . $conn->connect_error);
 }

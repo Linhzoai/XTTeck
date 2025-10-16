@@ -6,9 +6,7 @@ if (!isset($_SESSION['cart_session_id'])) {
     $_SESSION['cart_session_id'] = session_id();
 }
 
-$conn = new mysqli("localhost", "root", "", "xttech");
-$conn->set_charset("utf8mb4");
-if ($conn->connect_error) die("Kết nối thất bại: " . $conn->connect_error);
+require_once 'config.php';
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
@@ -627,9 +625,6 @@ $related_products = $conn->query("SELECT * FROM sanpham WHERE danhmuc_id = {$sp[
     </style>
 </head>
 <body>
-
-<?php include 'header.php'; ?>
-
 <!-- Breadcrumb -->
 <div class="breadcrumb">
     <div class="container_main">

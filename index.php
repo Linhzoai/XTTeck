@@ -7,8 +7,7 @@ if (!isset($_SESSION['cart_session_id'])) {
 }
 
 // Kết nối database
-$conn = new mysqli("localhost", "root", "", "xttech");
-$conn->set_charset("utf8mb4");
+require_once 'config.php';
 
 // Kiểm tra kết nối
 if ($conn->connect_error) {

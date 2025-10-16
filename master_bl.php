@@ -5,7 +5,7 @@ if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] != 1) {
     exit;
 }
 
-$conn = new mysqli("localhost", "root", "", "xttech");
+require_once 'config.php';
 if ($conn->connect_error) die("Kết nối thất bại");
 $conn->set_charset("utf8mb4");
 

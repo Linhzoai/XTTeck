@@ -1,422 +1,812 @@
-document.addEventListener("DOMContentLoaded", function () {
-  // ========== SLIDER FUNCTIONALITY ==========
-  const slides = document.querySelectorAll(".preview_img-item");
-  const prevButton = document.querySelector(".prev-button");
-  const nextButton = document.querySelector(".next-button");
-  const previewImg = document.querySelector(".preview_img");
-  let currentSlide = 0;
-  let slideInterval;
+// ========== SLIDER FUNCTIONALITY ==========
+let currentSlide = 0;
+const slides = document.querySelectorAll(".preview_img-item");
+const prevButton = document.querySelector(".prev-button");
+const nextButton = document.querySelector(".next-button");
 
-  // Hiển thị slide
-  function showSlide(index) {
-    // Đảm bảo index nằm trong khoảng cho phép
-    if (index >= slides.length) {
-      currentSlide = 0;
-    } else if (index < 0) {
-      currentSlide = slides.length - 1;
+function showSlide(index) {
+  slides.forEach((slide, i) => {
+    slide.classList.remove("active");
+    if (i === index) {
+      slide.classList.add("active");
+    }
+  });
+}
+
+function nextSlide() {
+  currentSlide = (currentSlide + 1) % slides.length;
+  showSlide(currentSlide);
+}
+
+function prevSlide() {
+  currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+  showSlide(currentSlide);
+}
+
+// Event listeners for slider buttons
+if (nextButton) {
+  nextButton.addEventListener("click", nextSlide);
+}
+
+if (prevButton) {
+  prevButton.addEventListener("click", prevSlide);
+}
+
+// Auto slide every 5 seconds
+let autoSlideInterval = setInterval(nextSlide, 5000);
+
+// Pause auto slide on hover
+const sliderContainer = document.querySelector(".slider-container");
+if (sliderContainer) {
+  sliderContainer.addEventListener("mouseenter", () => {
+    clearInterval(autoSlideInterval);
+  });
+
+  sliderContainer.addEventListener("mouseleave", () => {
+    autoSlideInterval = setInterval(nextSlide, 5000);
+  });
+}
+
+// Keyboard navigation
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowLeft") {
+    prevSlide();
+  } else if (e.key === "ArrowRight") {
+    nextSlide();
+  }
+});
+
+// ========== MOBILE MENU TOGGLE ==========
+const mobileMenuToggle = document.querySelector(".mobile-menu-toggle");
+const navList = document.querySelector(".nav_list");
+const body = document.body;
+
+if (mobileMenuToggle && navList) {
+  mobileMenuToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    mobileMenuToggle.classList.toggle("active");
+    navList.classList.toggle("active");
+
+    // Prevent body scroll when menu is open
+    if (navList.classList.contains("active")) {
+      body.style.overflow = "hidden";
     } else {
-      currentSlide = index;
-    }
-
-    // Ẩn tất cả ảnh
-    slides.forEach((slide) => slide.classList.remove("active"));
-
-    // Hiển thị ảnh hiện tại
-    if (slides[currentSlide]) {
-      slides[currentSlide].classList.add("active");
-    }
-  }
-
-  // Tự động chuyển slide
-  function startAutoSlide() {
-    slideInterval = setInterval(() => {
-      showSlide(currentSlide + 1);
-    }, 5000); // Chuyển sau mỗi 5 giây
-  }
-
-  // Dừng tự động chuyển slide
-  function stopAutoSlide() {
-    clearInterval(slideInterval);
-  }
-
-  // Nút điều hướng
-  if (prevButton && nextButton) {
-    prevButton.addEventListener("click", () => {
-      stopAutoSlide();
-      showSlide(currentSlide - 1);
-      startAutoSlide();
-    });
-
-    nextButton.addEventListener("click", () => {
-      stopAutoSlide();
-      showSlide(currentSlide + 1);
-      startAutoSlide();
-    });
-  }
-
-  // Vuốt cảm ứng cho mobile
-  let touchStartX = 0;
-  let touchEndX = 0;
-
-  if (previewImg) {
-    previewImg.addEventListener("touchstart", (e) => {
-      touchStartX = e.touches[0].clientX;
-      stopAutoSlide();
-    });
-
-    previewImg.addEventListener("touchend", (e) => {
-      touchEndX = e.changedTouches[0].clientX;
-      handleSwipe();
-      startAutoSlide();
-    });
-  }
-
-  function handleSwipe() {
-    const swipeDistance = touchEndX - touchStartX;
-    if (swipeDistance < -50) showSlide(currentSlide + 1); // Vuốt trái
-    if (swipeDistance > 50) showSlide(currentSlide - 1); // Vuốt phải
-  }
-
-  // Keyboard navigation
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowLeft") {
-      stopAutoSlide();
-      showSlide(currentSlide - 1);
-      startAutoSlide();
-    } else if (e.key === "ArrowRight") {
-      stopAutoSlide();
-      showSlide(currentSlide + 1);
-      startAutoSlide();
+      body.style.overflow = "";
     }
   });
 
-  // Khởi động slider
-  if (slides.length > 0) {
-    showSlide(0);
-    startAutoSlide();
-
-    // Dừng auto-slide khi hover vào slider
-    if (previewImg) {
-      previewImg.addEventListener("mouseenter", stopAutoSlide);
-      previewImg.addEventListener("mouseleave", startAutoSlide);
+  // Close menu when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!navList.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
+      if (navList.classList.contains("active")) {
+        mobileMenuToggle.classList.remove("active");
+        navList.classList.remove("active");
+        body.style.overflow = "";
+      }
     }
-  }
+  });
 
-  // ========== SMOOTH SCROLL ==========
-  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-    anchor.addEventListener("click", function (e) {
-      const href = this.getAttribute("href");
-      if (href !== "#" && href !== "#!") {
-        e.preventDefault();
-        const target = document.querySelector(href);
-        if (target) {
-          target.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }
+  // Close menu when clicking on a link
+  const navLinks = document.querySelectorAll(".nav_item > a");
+  navLinks.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      // Only close if it's not a dropdown menu
+      if (
+        !link.nextElementSibling ||
+        !link.nextElementSibling.classList.contains("nav_produte")
+      ) {
+        mobileMenuToggle.classList.remove("active");
+        navList.classList.remove("active");
+        body.style.overflow = "";
       }
     });
   });
+}
 
-  // ========== PRODUCT CARD ANIMATION ==========
-  const observerOptions = {
-    threshold: 0.1,
-    rootMargin: "0px 0px -50px 0px",
+// ========== MOBILE DROPDOWN TOGGLE ==========
+const navItems = document.querySelectorAll(".nav_item");
+
+navItems.forEach((item) => {
+  const link = item.querySelector("a");
+  const dropdown = item.querySelector(".nav_produte");
+
+  if (dropdown && window.innerWidth <= 768) {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      item.classList.toggle("active");
+    });
+  }
+});
+
+// Update dropdown behavior on resize
+window.addEventListener("resize", () => {
+  if (window.innerWidth > 768) {
+    navItems.forEach((item) => {
+      item.classList.remove("active");
+    });
+    body.style.overflow = "";
+    if (navList) {
+      navList.classList.remove("active");
+    }
+    if (mobileMenuToggle) {
+      mobileMenuToggle.classList.remove("active");
+    }
+  }
+});
+
+// ========== SCROLL ANIMATIONS ==========
+const observerOptions = {
+  threshold: 0.1,
+  rootMargin: "0px 0px -50px 0px",
+};
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = "1";
+      entry.target.style.transform = "translateY(0)";
+    }
+  });
+}, observerOptions);
+
+// Observe elements for scroll animations
+const animateElements = document.querySelectorAll(
+  ".stat-item, .produce_item, .why-item, .about_col, .testimonial-item"
+);
+
+animateElements.forEach((el) => {
+  el.style.opacity = "0";
+  el.style.transform = "translateY(30px)";
+  el.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+  observer.observe(el);
+});
+
+// ========== COUNTER ANIMATION FOR STATS ==========
+const statNumbers = document.querySelectorAll(".stat-number");
+
+const animateCounter = (element) => {
+  const target = element.textContent.replace(/[^0-9]/g, "");
+  const suffix = element.textContent.replace(/[0-9]/g, "");
+  const duration = 2000;
+  const increment = target / (duration / 16);
+  let current = 0;
+
+  const updateCounter = () => {
+    current += increment;
+    if (current < target) {
+      element.textContent = Math.floor(current) + suffix;
+      requestAnimationFrame(updateCounter);
+    } else {
+      element.textContent = target + suffix;
+    }
   };
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry, index) => {
+  updateCounter();
+};
+
+const statsObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        setTimeout(() => {
-          entry.target.style.opacity = "1";
-          entry.target.style.transform = "translateY(0)";
-        }, index * 100);
-        observer.unobserve(entry.target);
+        animateCounter(entry.target);
+        statsObserver.unobserve(entry.target);
       }
     });
-  }, observerOptions);
+  },
+  { threshold: 0.5 }
+);
 
-  // Áp dụng animation cho các sản phẩm
-  const productItems = document.querySelectorAll(".produce_item");
-  productItems.forEach((item) => {
-    item.style.opacity = "0";
-    item.style.transform = "translateY(30px)";
-    item.style.transition = "opacity 0.6s ease, transform 0.6s ease";
-    observer.observe(item);
-  });
+statNumbers.forEach((stat) => {
+  statsObserver.observe(stat);
+});
 
-  // ========== LOADING ANIMATION ==========
-  window.addEventListener("load", () => {
-    document.body.style.opacity = "0";
-    document.body.style.transition = "opacity 0.5s ease";
-    setTimeout(() => {
-      document.body.style.opacity = "1";
-    }, 100);
-  });
-
-  // ========== NAVBAR SCROLL EFFECT ==========
-  let lastScroll = 0;
-  const header = document.querySelector("header");
-
-  window.addEventListener("scroll", () => {
-    const currentScroll = window.pageYOffset;
-
-    if (currentScroll > 100) {
-      header.style.boxShadow = "0 6px 30px rgba(0,0,0,0.2)";
-    } else {
-      header.style.boxShadow = "0 4px 20px rgba(0,0,0,0.1)";
-    }
-
-    lastScroll = currentScroll;
-  });
-
-  // ========== CART BADGE ANIMATION ==========
-  const cartBadge = document.querySelector(".cart-badge");
-  if (cartBadge) {
-    // Thêm animation khi có thay đổi số lượng
-    const originalCount = cartBadge.textContent;
-
-    // Observer để theo dõi thay đổi nội dung
-    const badgeObserver = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (
-          mutation.type === "childList" ||
-          mutation.type === "characterData"
-        ) {
-          cartBadge.style.animation = "none";
-          setTimeout(() => {
-            cartBadge.style.animation =
-              "pulse 0.5s ease, bounce 2s infinite 0.5s";
-          }, 10);
-        }
-      });
-    });
-
-    badgeObserver.observe(cartBadge, {
-      childList: true,
-      characterData: true,
-      subtree: true,
-    });
-  }
-
-  // ========== FORM VALIDATION ==========
-  const searchForm = document.querySelector(".search_box form");
-  if (searchForm) {
-    searchForm.addEventListener("submit", (e) => {
-      const searchInput = searchForm.querySelector('input[type="text"]');
-      if (searchInput && searchInput.value.trim() === "") {
-        e.preventDefault();
-        searchInput.focus();
-        searchInput.style.borderColor = "#ff4757";
-        setTimeout(() => {
-          searchInput.style.borderColor = "";
-        }, 1000);
-      }
-    });
-  }
-
-  // Footer form validation
-  const footerForm = document.querySelector(".footer__form");
-  if (footerForm) {
-    footerForm.addEventListener("submit", (e) => {
+// ========== SMOOTH SCROLL FOR ANCHOR LINKS ==========
+document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+  anchor.addEventListener("click", function (e) {
+    const href = this.getAttribute("href");
+    if (href !== "#!" && href !== "#") {
       e.preventDefault();
-      const emailInput = footerForm.querySelector(".footer__form-input");
-      const emailValue = emailInput.value.trim();
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const target = document.querySelector(href);
+      if (target) {
+        const headerOffset = 100;
+        const elementPosition = target.getBoundingClientRect().top;
+        const offsetPosition =
+          elementPosition + window.pageYOffset - headerOffset;
 
-      if (!emailRegex.test(emailValue)) {
-        emailInput.style.borderColor = "#ff4757";
-        emailInput.placeholder = "Vui lòng nhập email hợp lệ";
-        setTimeout(() => {
-          emailInput.style.borderColor = "";
-          emailInput.placeholder = "Enter your email...";
-        }, 2000);
-      } else {
-        // Thành công
-        emailInput.value = "";
-        emailInput.placeholder = "Đã đăng ký thành công!";
-        emailInput.style.borderColor = "#2ecc71";
-        setTimeout(() => {
-          emailInput.style.borderColor = "";
-          emailInput.placeholder = "Enter your email...";
-        }, 3000);
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth",
+        });
+
+        // Close mobile menu if open
+        if (navList && navList.classList.contains("active")) {
+          mobileMenuToggle.classList.remove("active");
+          navList.classList.remove("active");
+          body.style.overflow = "";
+        }
       }
-    });
+    }
+  });
+});
+
+// ========== STICKY HEADER SHADOW ==========
+const header = document.querySelector("header");
+let lastScroll = 0;
+
+window.addEventListener("scroll", () => {
+  const currentScroll = window.pageYOffset;
+
+  if (currentScroll > 100) {
+    header.style.boxShadow = "0 4px 30px rgba(0, 0, 0, 0.2)";
+  } else {
+    header.style.boxShadow = "0 4px 20px rgba(0, 0, 0, 0.1)";
   }
 
-  // ========== LAZY LOADING IMAGES ==========
-  const images = document.querySelectorAll("img[data-src]");
-  const imageObserver = new IntersectionObserver((entries, observer) => {
+  lastScroll = currentScroll;
+});
+
+// ========== FORM VALIDATION ==========
+const emailForm = document.querySelector(".footer__form");
+if (emailForm) {
+  emailForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const emailInput = emailForm.querySelector('input[type="email"]');
+    const email = emailInput.value;
+
+    if (validateEmail(email)) {
+      alert(
+        "Cảm ơn bạn đã đăng ký! Chúng tôi sẽ gửi thông tin mới nhất đến email của bạn."
+      );
+      emailInput.value = "";
+    } else {
+      alert("Vui lòng nhập địa chỉ email hợp lệ.");
+    }
+  });
+}
+
+function validateEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+// ========== PRODUCT QUICK VIEW ==========
+const quickViewButtons = document.querySelectorAll(".quick-view-btn");
+quickViewButtons.forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // This would typically open a modal with product details
+    // For now, we'll just redirect to the product page
+    const productLink = btn.closest(".produce_link");
+    if (productLink) {
+      window.location.href = productLink.href;
+    }
+  });
+});
+
+// ========== LAZY LOADING IMAGES ==========
+const lazyImages = document.querySelectorAll('img[loading="lazy"]');
+
+if ("IntersectionObserver" in window) {
+  const imageObserver = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         const img = entry.target;
-        img.src = img.dataset.src;
-        img.removeAttribute("data-src");
+        img.src = img.src;
+        img.classList.add("loaded");
         imageObserver.unobserve(img);
       }
     });
   });
 
-  images.forEach((img) => imageObserver.observe(img));
+  lazyImages.forEach((img) => {
+    imageObserver.observe(img);
+  });
+} else {
+  // Fallback for browsers that don't support IntersectionObserver
+  lazyImages.forEach((img) => {
+    img.src = img.src;
+  });
+}
 
-  // ========== DROPDOWN MENU ENHANCEMENT ==========
-  const navItems = document.querySelectorAll(".nav_item");
-  navItems.forEach((item) => {
-    const dropdown = item.querySelector(".nav_produte");
-    if (dropdown) {
-      let timeout;
-
-      item.addEventListener("mouseenter", () => {
-        clearTimeout(timeout);
-        dropdown.style.display = "block";
-      });
-
-      item.addEventListener("mouseleave", () => {
-        timeout = setTimeout(() => {
-          dropdown.style.display = "none";
-        }, 300);
-      });
-
-      dropdown.addEventListener("mouseenter", () => {
-        clearTimeout(timeout);
-      });
-
-      dropdown.addEventListener("mouseleave", () => {
-        timeout = setTimeout(() => {
-          dropdown.style.display = "none";
-        }, 300);
-      });
+// ========== PRELOAD CRITICAL IMAGES ==========
+const preloadImages = () => {
+  const criticalImages = document.querySelectorAll(".preview_img-item");
+  criticalImages.forEach((img) => {
+    const src = img.getAttribute("src");
+    if (src) {
+      const preloadLink = document.createElement("link");
+      preloadLink.rel = "preload";
+      preloadLink.as = "image";
+      preloadLink.href = src;
+      document.head.appendChild(preloadLink);
     }
   });
+};
 
-  // ========== FLOATING ICONS ANIMATION ==========
-  const floatingIcons = document.querySelectorAll(".icon_link");
-  floatingIcons.forEach((icon, index) => {
-    icon.style.animationDelay = `${index * 0.2}s`;
-  });
+// Call preload function when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", preloadImages);
+} else {
+  preloadImages();
+}
 
-  // ========== PRICE FORMATTING ==========
-  const priceElements = document.querySelectorAll(".produce_price");
-  priceElements.forEach((priceEl) => {
-    const price = priceEl.textContent;
-    // Thêm animation cho giá khi hover vào sản phẩm
-    const productItem = priceEl.closest(".produce_item");
-    if (productItem) {
-      productItem.addEventListener("mouseenter", () => {
-        priceEl.style.transform = "scale(1.1)";
-        priceEl.style.transition = "transform 0.3s ease";
-      });
+// ========== PERFORMANCE OPTIMIZATION ==========
+// Debounce function for resize events
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
-      productItem.addEventListener("mouseleave", () => {
-        priceEl.style.transform = "scale(1)";
-      });
-    }
-  });
+// Use debounced resize handler
+const handleResize = debounce(() => {
+  // Resize logic here
+  if (window.innerWidth > 768) {
+    body.style.overflow = "";
+  }
+}, 250);
 
-  // ========== ABOUT SECTION ANIMATION ==========
-  const aboutCols = document.querySelectorAll(".about_col");
-  const aboutObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry, index) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => {
-            entry.target.style.opacity = "1";
-            entry.target.style.transform = "translateX(0)";
-          }, index * 100);
-          aboutObserver.unobserve(entry.target);
-        }
-      });
+window.addEventListener("resize", handleResize);
+
+// ========== CONSOLE MESSAGE ==========
+console.log(
+  "%cXTTech Website",
+  "font-size: 24px; font-weight: bold; color: #2f74d5;"
+);
+console.log("%cDesigned by Nguyễn Quang Linh", "font-size: 14px; color: #666;");
+
+// ========== TOUCH SWIPE FOR SLIDER (Mobile) ==========
+let touchStartX = 0;
+let touchEndX = 0;
+
+if (sliderContainer) {
+  sliderContainer.addEventListener(
+    "touchstart",
+    (e) => {
+      touchStartX = e.changedTouches[0].screenX;
     },
-    {
-      threshold: 0.2,
-    }
+    { passive: true }
   );
 
-  aboutCols.forEach((col) => {
-    col.style.opacity = "0";
-    col.style.transform = "translateX(-30px)";
-    col.style.transition = "opacity 0.6s ease, transform 0.6s ease";
-    aboutObserver.observe(col);
+  sliderContainer.addEventListener(
+    "touchend",
+    (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    },
+    { passive: true }
+  );
+}
+
+function handleSwipe() {
+  const swipeThreshold = 50;
+  const diff = touchStartX - touchEndX;
+
+  if (Math.abs(diff) > swipeThreshold) {
+    if (diff > 0) {
+      // Swiped left
+      nextSlide();
+    } else {
+      // Swiped right
+      prevSlide();
+    }
+  }
+}
+
+// ========== LOADING ANIMATION ==========
+window.addEventListener("load", () => {
+  document.body.classList.add("loaded");
+
+  // Fade in hero content
+  const heroContent = document.querySelector(".hero-content");
+  if (heroContent) {
+    heroContent.style.opacity = "0";
+    setTimeout(() => {
+      heroContent.style.transition = "opacity 1s ease";
+      heroContent.style.opacity = "1";
+    }, 300);
+  }
+});
+
+// ========== ACTIVE NAV ITEM ON SCROLL ==========
+const sections = document.querySelectorAll("section[id], div[id]");
+const navLinks = document.querySelectorAll('.nav_item a[href^="#"]');
+
+window.addEventListener("scroll", () => {
+  let current = "";
+
+  sections.forEach((section) => {
+    const sectionTop = section.offsetTop;
+    const sectionHeight = section.clientHeight;
+    if (window.pageYOffset >= sectionTop - 200) {
+      current = section.getAttribute("id");
+    }
   });
 
-  // ========== CONSOLE LOG ==========
-  console.log(
-    "%cWebsite XTTech",
-    "color: #2f74d5; font-size: 24px; font-weight: bold;"
-  );
-  console.log(
-    "%cGiao diện đã được tối ưu hóa và cải tiến",
-    "color: #555; font-size: 14px;"
-  );
-  console.log("%c© 2025 - Nguyễn Quang Linh", "color: #999; font-size: 12px;");
+  navLinks.forEach((link) => {
+    link.parentElement.classList.remove("active-section");
+    if (link.getAttribute("href") === `#${current}`) {
+      link.parentElement.classList.add("active-section");
+    }
+  });
+});
 
-  // ========== PERFORMANCE MONITORING ==========
-  if ("performance" in window) {
-    window.addEventListener("load", () => {
-      const perfData = window.performance.timing;
-      const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
-      console.log(`⚡ Thời gian tải trang: ${pageLoadTime}ms`);
+// Add CSS for active nav item
+const activeNavStyle = document.createElement("style");
+activeNavStyle.textContent = `
+  .nav_item.active-section > a {
+    background: rgba(255, 255, 255, 0.2);
+  }
+`;
+document.head.appendChild(activeNavStyle);
+
+// ========== PRODUCT CARD TILT EFFECT (Desktop) ==========
+if (window.innerWidth > 768) {
+  const productCards = document.querySelectorAll(".produce_item");
+
+  productCards.forEach((card) => {
+    card.addEventListener("mousemove", (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+
+      const rotateX = (y - centerY) / 20;
+      const rotateY = (centerX - x) / 20;
+
+      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
+    });
+
+    card.addEventListener("mouseleave", () => {
+      card.style.transform = "";
+    });
+  });
+}
+
+// ========== SEARCH FUNCTIONALITY ==========
+const searchInput = document.querySelector('.search_box input[type="text"]');
+if (searchInput) {
+  searchInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const searchValue = searchInput.value.trim();
+      if (searchValue) {
+        window.location.href = `sanpham.php?keyword=${encodeURIComponent(
+          searchValue
+        )}`;
+      }
+    }
+  });
+}
+
+// ========== FLOATING ICONS TOOLTIP ==========
+const floatingIcons = document.querySelectorAll(".icon_link");
+floatingIcons.forEach((icon) => {
+  const tooltip = document.createElement("span");
+  tooltip.className = "icon-tooltip";
+  tooltip.textContent = icon.getAttribute("aria-label") || "Social";
+  icon.appendChild(tooltip);
+});
+
+const tooltipStyle = document.createElement("style");
+tooltipStyle.textContent = `
+  .icon_link {
+    position: relative;
+  }
+  
+  .icon-tooltip {
+    position: absolute;
+    right: 70px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+  
+  .icon-tooltip::after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+    border-left-color: #333;
+  }
+  
+  .icon_link:hover .icon-tooltip {
+    opacity: 1;
+    visibility: visible;
+    right: 65px;
+  }
+  
+  @media (max-width: 768px) {
+    .icon-tooltip {
+      display: none;
+    }
+  }
+`;
+document.head.appendChild(tooltipStyle);
+
+// ========== CART BADGE ANIMATION ==========
+const cartBadge = document.querySelector(".cart-badge");
+if (cartBadge) {
+  // Add extra animation when hovering cart icon
+  const cartIcon = document.querySelector(".cart-icon");
+  if (cartIcon) {
+    cartIcon.addEventListener("mouseenter", () => {
+      cartBadge.style.animation = "none";
+      setTimeout(() => {
+        cartBadge.style.animation = "pulse 0.5s ease";
+      }, 10);
     });
   }
+}
 
-  // ========== ERROR HANDLING FOR IMAGES ==========
-  const allImages = document.querySelectorAll("img");
-  allImages.forEach((img) => {
-    img.addEventListener("error", function () {
-      // Thay thế bằng ảnh placeholder nếu ảnh bị lỗi
-      if (!this.classList.contains("error-handled")) {
-        this.classList.add("error-handled");
-        this.style.background =
-          "linear-gradient(135deg, #a4eeee 0%, #8dd9d9 100%)";
-        this.style.display = "flex";
-        this.style.alignItems = "center";
-        this.style.justifyContent = "center";
-        this.alt = "Không thể tải ảnh";
-      }
+// ========== TESTIMONIAL SLIDER (Optional Enhancement) ==========
+const testimonialItems = document.querySelectorAll(".testimonial-item");
+if (testimonialItems.length > 3 && window.innerWidth <= 768) {
+  let currentTestimonial = 0;
+
+  const showTestimonial = (index) => {
+    testimonialItems.forEach((item, i) => {
+      item.style.display = i === index ? "block" : "none";
     });
-  });
-
-  // ========== MOBILE MENU TOGGLE (Optional) ==========
-  // Có thể thêm hamburger menu cho mobile nếu cần
-  const createMobileMenu = () => {
-    const navList = document.querySelector(".nav_list");
-    if (window.innerWidth <= 768 && navList) {
-      // Code cho mobile menu có thể thêm vào đây nếu cần
-    }
   };
 
-  window.addEventListener("resize", createMobileMenu);
-  createMobileMenu();
+  // Show first testimonial initially
+  showTestimonial(0);
 
-  // ========== PREVENT EMPTY FORM SUBMISSION ==========
-  const allForms = document.querySelectorAll("form");
-  allForms.forEach((form) => {
-    form.addEventListener("submit", function (e) {
-      const inputs = this.querySelectorAll(
-        "input[required], textarea[required]"
-      );
-      let isValid = true;
+  // Auto rotate testimonials on mobile
+  setInterval(() => {
+    currentTestimonial = (currentTestimonial + 1) % testimonialItems.length;
+    showTestimonial(currentTestimonial);
+  }, 5000);
+}
 
-      inputs.forEach((input) => {
-        if (input.value.trim() === "") {
-          isValid = false;
-          input.style.borderColor = "#ff4757";
-          setTimeout(() => {
-            input.style.borderColor = "";
-          }, 2000);
-        }
-      });
-
-      if (!isValid && !this.classList.contains("footer__form")) {
-        e.preventDefault();
-      }
-    });
-  });
-
-  // ========== INIT COMPLETE ==========
-  console.log(
-    "%c✓ JavaScript đã được tải thành công!",
-    "color: #2ecc71; font-weight: bold;"
-  );
+// ========== PRICE FORMATTING ==========
+const priceElements = document.querySelectorAll(".produce_price");
+priceElements.forEach((price) => {
+  const text = price.textContent;
+  const number = text.match(/[\d,]+/);
+  if (number) {
+    price.innerHTML = `<span class="price-amount">${number[0]}</span><span class="price-currency">₫</span>`;
+  }
 });
+
+const priceStyle = document.createElement("style");
+priceStyle.textContent = `
+  .price-amount {
+    font-size: 24px;
+    font-weight: 800;
+  }
+  
+  .price-currency {
+    font-size: 18px;
+    margin-left: 2px;
+  }
+`;
+document.head.appendChild(priceStyle);
+
+// ========== PREVENT FORM DOUBLE SUBMISSION ==========
+const forms = document.querySelectorAll("form");
+forms.forEach((form) => {
+  form.addEventListener("submit", function (e) {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (submitBtn && submitBtn.disabled) {
+      e.preventDefault();
+      return false;
+    }
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      setTimeout(() => {
+        submitBtn.disabled = false;
+      }, 3000);
+    }
+  });
+});
+
+// ========== SCROLL PROGRESS INDICATOR ==========
+const createScrollIndicator = () => {
+  const indicator = document.createElement("div");
+  indicator.className = "scroll-progress";
+  document.body.appendChild(indicator);
+
+  const indicatorStyle = document.createElement("style");
+  indicatorStyle.textContent = `
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #d40000 0%, #2f74d5 100%);
+      z-index: 9999;
+      transition: width 0.1s ease;
+      width: 0;
+    }
+  `;
+  document.head.appendChild(indicatorStyle);
+
+  window.addEventListener("scroll", () => {
+    const windowHeight =
+      document.documentElement.scrollHeight - window.innerHeight;
+    const scrolled = (window.pageYOffset / windowHeight) * 100;
+    indicator.style.width = `${scrolled}%`;
+  });
+};
+
+createScrollIndicator();
+
+// ========== ERROR HANDLING FOR IMAGES ==========
+const images = document.querySelectorAll("img");
+images.forEach((img) => {
+  img.addEventListener("error", function () {
+    this.style.backgroundColor = "#f0f0f0";
+    this.style.display = "flex";
+    this.style.alignItems = "center";
+    this.style.justifyContent = "center";
+    this.alt = "Image not found";
+  });
+});
+
+// ========== ACCESSIBILITY ENHANCEMENTS ==========
+// Add skip to main content link
+const skipLink = document.createElement("a");
+skipLink.href = "#main";
+skipLink.className = "skip-link";
+skipLink.textContent = "Skip to main content";
+document.body.insertBefore(skipLink, document.body.firstChild);
+
+const skipLinkStyle = document.createElement("style");
+skipLinkStyle.textContent = `
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #2f74d5;
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    z-index: 10000;
+    border-radius: 0 0 4px 0;
+  }
+  
+  .skip-link:focus {
+    top: 0;
+  }
+`;
+document.head.appendChild(skipLinkStyle);
+
+// Add main id if not exists
+const main = document.querySelector("main");
+if (main && !main.id) {
+  main.id = "main";
+}
+
+// ========== COOKIE CONSENT (Optional) ==========
+const showCookieConsent = () => {
+  const consent = localStorage.getItem("cookieConsent");
+  if (!consent) {
+    const banner = document.createElement("div");
+    banner.className = "cookie-banner";
+    banner.innerHTML = `
+      <div class="cookie-content">
+        <p>Chúng tôi sử dụng cookie để cải thiện trải nghiệm của bạn. Bằng cách tiếp tục sử dụng trang web, bạn đồng ý với việc sử dụng cookie.</p>
+        <button class="cookie-accept">Đồng ý</button>
+      </div>
+    `;
+    document.body.appendChild(banner);
+
+    const bannerStyle = document.createElement("style");
+    bannerStyle.textContent = `
+      .cookie-banner {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(16, 55, 92, 0.98);
+        color: white;
+        padding: 20px;
+        z-index: 9998;
+        animation: slideUp 0.5s ease;
+      }
+      
+      @keyframes slideUp {
+        from {
+          transform: translateY(100%);
+        }
+        to {
+          transform: translateY(0);
+        }
+      }
+      
+      .cookie-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+      
+      .cookie-content p {
+        margin: 0;
+        flex: 1;
+      }
+      
+      .cookie-accept {
+        padding: 10px 30px;
+        background: #2f74d5;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.3s ease;
+      }
+      
+      .cookie-accept:hover {
+        background: #1a5bb8;
+        transform: scale(1.05);
+      }
+      
+      @media (max-width: 768px) {
+        .cookie-content {
+          flex-direction: column;
+          text-align: center;
+        }
+        
+        .cookie-accept {
+          width: 100%;
+        }
+      }
+    `;
+    document.head.appendChild(bannerStyle);
+
+    banner.querySelector(".cookie-accept").addEventListener("click", () => {
+      localStorage.setItem("cookieConsent", "true");
+      banner.style.animation = "slideDown 0.5s ease";
+      setTimeout(() => banner.remove(), 500);
+    });
+
+    const slideDownStyle = document.createElement("style");
+    slideDownStyle.textContent = `
+      @keyframes slideDown {
+        from {
+          transform: translateY(0);
+        }
+        to {
+          transform: translateY(100%);
+        }
+      }
+    `;
+    document.head.appendChild(slideDownStyle);
+  }
+};
+
+// Show cookie consent after 1 second
+setTimeout(showCookieConsent, 1000);
+
+// ========== INITIALIZATION COMPLETE ==========
+console.log(
+  "%c✓ Website initialized successfully",
+  "color: #27ae60; font-weight: bold;"
+);
+console.log("%cAll features loaded and ready!", "color: #2f74d5;");

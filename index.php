@@ -49,6 +49,14 @@ $result = $conn->query($sql);
                 <figure>
                     <img src="img/logo.png" alt="XTTech Logo" class="logo">
                 </figure>
+
+                <!-- Mobile Menu Toggle -->
+                <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
                 <ul class="nav_list">
                     <li class="nav_item">
                         <a href="index.php"><i class="fa-solid fa-house"></i> Trang chủ</a>
@@ -105,37 +113,94 @@ $result = $conn->query($sql);
 
     <!-- ========== MAIN CONTENT ========== -->
     <main>
-        <!-- Slider -->
+        <!-- Hero Slider -->
         <div class="preview">
-                <div class="slider-container">
-                    <button class="slider-button prev-button" aria-label="Previous slide">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </button>
-                    <div class="preview_img">
-                        <img src="img/cua1.jpg" alt="Cửa nhôm cao cấp XTTech" class="preview_img-item active">
-                        <img src="img/cua2.jpg" alt="Cửa uPVC chất lượng cao" class="preview_img-item">
-                        <img src="img/cua3.jpg" alt="Sản phẩm cửa kính hiện đại" class="preview_img-item">
-                    </div>
-                    <button class="slider-button next-button" aria-label="Next slide">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </button>
+            <div class="slider-container">
+                <button class="slider-button prev-button" aria-label="Previous slide">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <div class="preview_img">
+                    <img src="img/cua1.jpg" alt="Cửa nhôm cao cấp XTTech" class="preview_img-item active">
+                    <img src="img/cua2.jpg" alt="Cửa uPVC chất lượng cao" class="preview_img-item">
+                    <img src="img/cua3.jpg" alt="Sản phẩm cửa kính hiện đại" class="preview_img-item">
                 </div>
+                <button class="slider-button next-button" aria-label="Next slide">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                
+                <!-- Hero Content Overlay -->
+                <div class="hero-content">
+                    <h1 class="hero-title">Giải Pháp Cửa Hoàn Hảo Cho Ngôi Nhà Bạn</h1>
+                    <p class="hero-subtitle">Chất lượng châu Âu - Giá cả cạnh tranh - Dịch vụ chuyên nghiệp</p>
+                    <div class="hero-buttons">
+                        <a href="sanpham.php" class="hero-btn primary">Xem sản phẩm</a>
+                        <a href="lienhe.php" class="hero-btn secondary">Liên hệ tư vấn</a>
+                    </div>
+                </div>
+            </div>
         </div>
 
+        <!-- Stats Section -->
+        <section class="stats-section">
+            <div class="container_main">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <h3 class="stat-number">15+</h3>
+                        <p class="stat-label">Năm kinh nghiệm</p>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <h3 class="stat-number">5000+</h3>
+                        <p class="stat-label">Khách hàng tin tưởng</p>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fa-solid fa-building"></i>
+                        </div>
+                        <h3 class="stat-number">3000+</h3>
+                        <p class="stat-label">Dự án hoàn thành</p>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <h3 class="stat-number">100%</h3>
+                        <p class="stat-label">Cam kết chất lượng</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Hotline -->
-        <h1 class="Title_heading">Hotline kinh doanh: <strong>+84 012 345 678</strong></h1>
+        <div class="hotline-banner">
+            <div class="container_main">
+                <div class="hotline-content">
+                    <i class="fa-solid fa-phone-volume"></i>
+                    <span>Hotline kinh doanh:</span>
+                    <strong>+84 012 345 678</strong>
+                    <a href="tel:+84012345678" class="hotline-btn">Gọi ngay</a>
+                </div>
+            </div>
+        </div>
 
         <!-- Sản phẩm -->
         <div class="produce">
             <div class="container_main">
                 <div class="produce_body">
                     <h2 class="produce_heading">SẢN PHẨM CỦA CHÚNG TÔI</h2>
+                    <p class="section-subtitle">Khám phá bộ sưu tập cửa cao cấp với thiết kế hiện đại và chất lượng vượt trội</p>
 
                     <div class="produce_list">
                         <?php if ($result && $result->num_rows > 0): ?>
                             <?php while ($row = $result->fetch_assoc()): ?>
                                 <a href="thongtinsanpham.php?id=<?= $row['id']; ?>" class="produce_link">
                                     <div class="produce_item">
+                                        <div class="product-badge">Mới</div>
                                         <figure>
                                             <img src="<?= htmlspecialchars($row['hinh_anh']); ?>" 
                                                  alt="<?= htmlspecialchars($row['ten_sanpham']); ?>" 
@@ -144,6 +209,11 @@ $result = $conn->query($sql);
                                         </figure>
                                         <h3 class="produce_title"><?= htmlspecialchars($row['ten_sanpham']); ?></h3>
                                         <p class="produce_price"><?= number_format($row['gia']); ?>₫</p>
+                                        <div class="product-actions">
+                                            <button class="quick-view-btn">
+                                                <i class="fa-solid fa-eye"></i> Xem nhanh
+                                            </button>
+                                        </div>
                                     </div>
                                 </a>
                             <?php endwhile; ?>
@@ -153,11 +223,50 @@ $result = $conn->query($sql);
                     </div>
 
                     <div class="see_all">
-                        <a href="sanpham.php" class="btn_see_all">Xem tất cả <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i></a>
+                        <a href="sanpham.php" class="btn_see_all">Xem tất cả sản phẩm <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i></a>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Why Choose Us -->
+        <section class="why-choose">
+            <div class="container_main">
+                <h2 class="produce_heading">TẠI SAO CHỌN CHÚNG TÔI?</h2>
+                <p class="section-subtitle">Cam kết mang đến những giá trị tốt nhất cho khách hàng</p>
+                
+                <div class="why-grid">
+                    <div class="why-item">
+                        <div class="why-icon">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h3>Bảo hành dài hạn</h3>
+                        <p>Bảo hành 10 năm cho sản phẩm, 2 năm cho phụ kiện</p>
+                    </div>
+                    <div class="why-item">
+                        <div class="why-icon">
+                            <i class="fa-solid fa-truck-fast"></i>
+                        </div>
+                        <h3>Giao hàng nhanh chóng</h3>
+                        <p>Vận chuyển và lắp đặt trong vòng 7-14 ngày</p>
+                    </div>
+                    <div class="why-item">
+                        <div class="why-icon">
+                            <i class="fa-solid fa-certificate"></i>
+                        </div>
+                        <h3>Chất lượng đảm bảo</h3>
+                        <p>Sản phẩm đạt chuẩn quốc tế ISO 9001:2015</p>
+                    </div>
+                    <div class="why-item">
+                        <div class="why-icon">
+                            <i class="fa-solid fa-money-bill-trend-up"></i>
+                        </div>
+                        <h3>Giá cả hợp lý</h3>
+                        <p>Cam kết giá tốt nhất thị trường</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <!-- Về chúng tôi -->
         <div class="about" id="about">
@@ -232,6 +341,75 @@ $result = $conn->query($sql);
                 </div>
             </div>
         </div>
+
+        <!-- Testimonials Section -->
+        <section class="testimonials">
+            <div class="container_main">
+                <h2 class="produce_heading">KHÁCH HÀNG NÓI GÌ VỀ CHÚNG TÔI</h2>
+                <p class="section-subtitle">Những đánh giá chân thực từ khách hàng</p>
+                
+                <div class="testimonial-grid">
+                    <div class="testimonial-item">
+                        <div class="testimonial-stars">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <p class="testimonial-text">"Sản phẩm chất lượng tuyệt vời, đội ngũ thi công chuyên nghiệp. Tôi rất hài lòng với cửa nhôm mà XTTech lắp đặt cho nhà tôi."</p>
+                        <div class="testimonial-author">
+                            <strong>Anh Minh</strong>
+                            <span>Hải Phòng</span>
+                        </div>
+                    </div>
+                    <div class="testimonial-item">
+                        <div class="testimonial-stars">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <p class="testimonial-text">"Giá cả hợp lý, tư vấn nhiệt tình. Cửa uPVC của công ty rất đẹp và bền. Tôi sẽ giới thiệu cho bạn bè."</p>
+                        <div class="testimonial-author">
+                            <strong>Chị Hoa</strong>
+                            <span>Hà Nội</span>
+                        </div>
+                    </div>
+                    <div class="testimonial-item">
+                        <div class="testimonial-stars">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <p class="testimonial-text">"Dịch vụ tốt, lắp đặt nhanh chóng. Cửa kính của XTTech làm cho căn hộ của tôi trở nên sang trọng hơn rất nhiều."</p>
+                        <div class="testimonial-author">
+                            <strong>Anh Tuấn</strong>
+                            <span>TP. HCM</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="container_main">
+                <div class="cta-content">
+                    <h2>Bạn Cần Tư Vấn Về Sản Phẩm?</h2>
+                    <p>Đội ngũ chuyên gia của chúng tôi luôn sẵn sàng hỗ trợ bạn</p>
+                    <div class="cta-buttons">
+                        <a href="lienhe.php" class="cta-btn primary">Liên hệ ngay</a>
+                        <a href="tel:+84012345678" class="cta-btn secondary">
+                            <i class="fa-solid fa-phone"></i> +84 012 345 678
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- ========== FOOTER ========== -->
@@ -294,7 +472,7 @@ $result = $conn->query($sql);
                     <h3 class="footer__heading">Dự án</h3>
                     <ul class="footer__list">
                         <li class="footer__item">
-                            <a href="duan.php" class="footer__link">Dự án tiêu biểu</a>
+                            <a href="#!" class="footer__link">Dự án tiêu biểu</a>
                         </li>
                     </ul>
                 </div>

@@ -106,33 +106,45 @@ if (mobileMenuToggle && navList) {
 // ========== MOBILE DROPDOWN TOGGLE ==========
 const navItems = document.querySelectorAll(".nav_item");
 
-navItems.forEach((item) => {
-  const link = item.querySelector("a");
-  const dropdown = item.querySelector(".nav_produte");
+// Function to handle mobile dropdown
+function handleMobileDropdown() {
+  navItems.forEach((item) => {
+    const link = item.querySelector("a");
+    const dropdown = item.querySelector(".nav_produte");
 
-  if (dropdown && window.innerWidth <= 768) {
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      item.classList.toggle("active");
-    });
-  }
-});
+    if (dropdown && window.innerWidth <= 768) {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        item.classList.toggle("active");
+      });
+    }
+  });
+}
+
+// Initialize mobile dropdown
+handleMobileDropdown();
 
 // Update dropdown behavior on resize
-window.addEventListener("resize", () => {
-  if (window.innerWidth > 768) {
-    navItems.forEach((item) => {
-      item.classList.remove("active");
-    });
-    body.style.overflow = "";
-    if (navList) {
-      navList.classList.remove("active");
+window.addEventListener(
+  "resize",
+  debounce(() => {
+    if (window.innerWidth > 768) {
+      navItems.forEach((item) => {
+        item.classList.remove("active");
+      });
+      body.style.overflow = "";
+      if (navList) {
+        navList.classList.remove("active");
+      }
+      if (mobileMenuToggle) {
+        mobileMenuToggle.classList.remove("active");
+      }
+    } else {
+      // Re-initialize mobile dropdown when switching to mobile
+      handleMobileDropdown();
     }
-    if (mobileMenuToggle) {
-      mobileMenuToggle.classList.remove("active");
-    }
-  }
-});
+  }, 250)
+);
 
 // ========== SCROLL ANIMATIONS ==========
 const observerOptions = {
@@ -473,7 +485,10 @@ if (window.innerWidth > 768) {
 }
 
 // ========== SEARCH FUNCTIONALITY ==========
+const searchBox = document.querySelector(".search_box");
 const searchInput = document.querySelector('.search_box input[type="text"]');
+const searchToggle = document.querySelector(".search_toggle");
+
 if (searchInput) {
   searchInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
@@ -484,6 +499,31 @@ if (searchInput) {
           searchValue
         )}`;
       }
+    }
+  });
+}
+
+if (searchToggle && searchBox && searchInput) {
+  searchToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    searchBox.classList.toggle("active");
+    if (searchBox.classList.contains("active")) {
+      setTimeout(() => searchInput.focus(), 10);
+    }
+  });
+
+  // Close on outside click
+  document.addEventListener("click", (e) => {
+    if (!searchBox.contains(e.target)) {
+      searchBox.classList.remove("active");
+    }
+  });
+
+  // Close on ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      searchBox.classList.remove("active");
+      searchInput.blur();
     }
   });
 }
@@ -561,7 +601,11 @@ if (cartBadge) {
 
 // ========== TESTIMONIAL SLIDER (Optional Enhancement) ==========
 const testimonialItems = document.querySelectorAll(".testimonial-item");
-if (testimonialItems.length > 3 && window.innerWidth <= 768) {
+if (
+  testimonialItems.length > 3 &&
+  window.innerWidth <= 768 &&
+  !document.body.classList.contains("carousel-ready")
+) {
   let currentTestimonial = 0;
 
   const showTestimonial = (index) => {
@@ -810,3 +854,107 @@ console.log(
   "color: #27ae60; font-weight: bold;"
 );
 console.log("%cAll features loaded and ready!", "color: #2f74d5;");
+
+// ========== MOBILE CAROUSEL WITH DOTS (Products & Testimonials) ==========
+(function initMobileCarousels() {
+  if (window.innerWidth > 1024) return;
+
+  const setupCarousel = (listSelector, itemSelector) => {
+    const listEl = document.querySelector(listSelector);
+    if (!listEl) return;
+
+    const items = listEl.querySelectorAll(itemSelector);
+    if (!items.length) return;
+
+    // Mark body to avoid old mobile slider conflicts
+    document.body.classList.add("carousel-ready");
+
+    // Create dots container
+    const dots = document.createElement("div");
+    dots.className = "carousel-dots";
+
+    // Determine number of dots (limit to 8 if more)
+    const total = Math.min(items.length, 8);
+
+    const dotsRefs = [];
+    for (let i = 0; i < total; i++) {
+      const dot = document.createElement("span");
+      dot.className = "carousel-dot";
+      if (i === 0) dot.classList.add("active");
+      dot.addEventListener("click", () => {
+        const targetIndex = i;
+        const targetItem = items[targetIndex];
+        if (targetItem) {
+          listEl.scrollTo({ left: targetItem.offsetLeft, behavior: "smooth" });
+        }
+      });
+      dots.appendChild(dot);
+      dotsRefs.push(dot);
+    }
+
+    // Insert dots after the list
+    listEl.parentNode.insertBefore(dots, listEl.nextSibling);
+
+    // Sync active dot on scroll using index by viewport
+    let ticking = false;
+    const updateActive = () => {
+      // Compute current index by nearest item to scrollLeft
+      const viewportWidth = listEl.clientWidth;
+      let index = Math.round(listEl.scrollLeft / viewportWidth);
+      if (index < 0) index = 0;
+      if (index > total - 1) index = total - 1;
+      dotsRefs.forEach((d, idx) => d.classList.toggle("active", idx === index));
+    };
+
+    listEl.addEventListener("scroll", () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateActive();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // Gently snap to the nearest item after user stops scrolling
+    let snapTimeout;
+    listEl.addEventListener("scroll", () => {
+      clearTimeout(snapTimeout);
+      snapTimeout = setTimeout(() => {
+        const viewportWidth = listEl.clientWidth;
+        let index = Math.round(listEl.scrollLeft / viewportWidth);
+        if (index < 0) index = 0;
+        if (index > total - 1) index = total - 1;
+        const targetItem = items[index];
+        if (targetItem) {
+          listEl.scrollTo({ left: targetItem.offsetLeft, behavior: "smooth" });
+        }
+      }, 140);
+    });
+
+    // Also observe intersection to handle momentum scroll accuracy
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          const visible = entries
+            .filter((e) => e.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+          if (visible.length) {
+            const idx = Array.from(items).indexOf(visible[0].target);
+            if (idx >= 0 && idx < total) {
+              dotsRefs.forEach((d, i) =>
+                d.classList.toggle("active", i === idx)
+              );
+            }
+          }
+        },
+        { root: listEl, threshold: [0.5, 0.75] }
+      );
+      items.forEach((it) => io.observe(it));
+    }
+  };
+
+  // Initialize for products and testimonials
+  setupCarousel(".produce_list", ".produce_link");
+  setupCarousel(".testimonial-grid", ".testimonial-item");
+})();

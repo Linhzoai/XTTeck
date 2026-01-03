@@ -1,5 +1,6 @@
 <?php
-session_start();
+// Khởi tạo session
+require_once 'session_config.php';
 
 // Kết nối CSDL
 require_once 'config.php';
@@ -11,33 +12,33 @@ $username = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Nếu là đăng ký
     if (isset($_POST['register'])) {
-        $username = trim($_POST['reg_username'] ?? '');
-        $password = trim($_POST['reg_password'] ?? '');
+        $ho_ten = trim($_POST['ho_ten'] ?? '');
         $email = trim($_POST['reg_email'] ?? '');
+        $password = trim($_POST['reg_password'] ?? '');
 
-        if ($username === '' || $password === '' || $email === '') {
+        if ($ho_ten === '' || $password === '' || $email === '') {
             $errors = 'Vui lòng nhập đầy đủ thông tin đăng ký.';
         } else {
-            // Kiểm tra trùng tài khoản
-            $check = $conn->prepare("SELECT id FROM user WHERE user = ? LIMIT 1");
-            $check->bind_param("s", $username);
+            // Kiểm tra trùng email
+            $check = $conn->prepare('SELECT id FROM nguoi_dung WHERE email = ? LIMIT 1');
+            $check->bind_param('s', $email);
             $check->execute();
             $result = $check->get_result();
 
             if ($result->num_rows > 0) {
-                $errors = 'Tên tài khoản đã tồn tại.';
+                $errors = 'Email đã được sử dụng.';
             } else {
                 // Mã hóa mật khẩu
                 $hash = password_hash($password, PASSWORD_DEFAULT);
 
-                // Thêm người dùng mới (role = 0)
-                $insert = $conn->prepare("INSERT INTO user (user, mk, email, role) VALUES (?, ?, ?, 0)");
-                $insert->bind_param("sss", $username, $hash, $email);
+                // Thêm người dùng mới (vai_tro = hoc_vien)
+                $insert = $conn->prepare("INSERT INTO nguoi_dung (ho_ten, email, mat_khau, vai_tro, ngay_tao) VALUES (?, ?, ?, 'hoc_vien', NOW())");
+                $insert->bind_param('sss', $ho_ten, $email, $hash);
 
                 if ($insert->execute()) {
                     $success = 'Đăng ký thành công! Vui lòng đăng nhập.';
                 } else {
-                    $errors = 'Đăng ký thất bại: ' . $conn->error;
+                    $errors = 'Đăng ký thất bại: '.$conn->error;
                 }
                 $insert->close();
             }
@@ -48,40 +49,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Nếu là đăng nhập
     if (isset($_POST['login'])) {
-        $username = isset($_POST['username']) ? trim($_POST['username']) : '';
+        $email = isset($_POST['username']) ? trim($_POST['username']) : '';
         $password = isset($_POST['password']) ? $_POST['password'] : '';
 
-        if ($username === '' || $password === '') {
-            $errors = 'Vui lòng nhập tài khoản và mật khẩu.';
+        if ($email === '' || $password === '') {
+            $errors = 'Vui lòng nhập email và mật khẩu.';
         } else {
-            $stmt = $conn->prepare("SELECT id, user, mk, role FROM user WHERE user = ? LIMIT 1");
+            $stmt = $conn->prepare('SELECT id, ho_ten, email, mat_khau, vai_tro FROM nguoi_dung WHERE email = ? LIMIT 1');
             if (!$stmt) {
-                die("Lỗi prepare: " . $conn->error);
+                exit('Lỗi prepare: '.$conn->error);
             }
 
-            $stmt->bind_param("s", $username);
+            $stmt->bind_param('s', $email);
             $stmt->execute();
             $result = $stmt->get_result();
 
             if ($row = $result->fetch_assoc()) {
-                $hash = $row['mk'];
+                $hash = $row['mat_khau'];
 
                 if (password_verify($password, $hash) || $password === $hash) {
-                    $_SESSION['admin_id'] = $row['id'];
-                    $_SESSION['admin_user'] = $row['user'];
-                    $_SESSION['admin_role'] = $row['role'];
+                    $_SESSION['user_id'] = $row['id'];
+                    $_SESSION['user_name'] = $row['ho_ten'];
+                    $_SESSION['user_email'] = $row['email'];
+                    $_SESSION['user_role'] = $row['vai_tro'];
 
-                    if ((int)$row['role'] === 1) {
-                        header("Location: master.php");
+                    // Nếu là admin
+                    if ($row['vai_tro'] === 'admin') {
+                        $_SESSION['admin_id'] = $row['id'];
+                        $_SESSION['admin_user'] = $row['ho_ten'];
+                        $_SESSION['admin_role'] = 'admin';
+                        header('Location: master.php');
                     } else {
-                        header("Location: index_kh.php");
+                        // Học viên hoặc giảng viên
+                        $redirect = $_GET['redirect'] ?? 'index.php';
+                        header('Location: '.$redirect);
                     }
                     exit;
                 } else {
                     $errors = 'Sai mật khẩu.';
                 }
             } else {
-                $errors = 'Tài khoản không tồn tại.';
+                $errors = 'Email không tồn tại.';
             }
 
             $stmt->close();
@@ -109,11 +117,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <form action="login.php" method="POST">
                 <h1>Tạo tài khoản</h1>
 
-                <?php if ($errors && isset($_POST['register'])): ?>
-                    <p style="color:red; font-weight:600;"><?= htmlspecialchars($errors) ?></p>
-                <?php elseif ($success): ?>
-                    <p style="color:green; font-weight:600;"><?= htmlspecialchars($success) ?></p>
-                <?php endif; ?>
+                <?php if ($errors && isset($_POST['register'])) { ?>
+                    <p style="color:red; font-weight:600;"><?php echo htmlspecialchars($errors); ?></p>
+                <?php } elseif ($success) { ?>
+                    <p style="color:green; font-weight:600;"><?php echo htmlspecialchars($success); ?></p>
+                <?php } ?>
 
                 <div class="social-container">
                     <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
@@ -122,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <span>hoặc dùng email của bạn để đăng ký</span>
 
-                <input type="text" name="reg_username" placeholder="Tên tài khoản" required />
+                <input type="text" name="ho_ten" placeholder="Họ và tên" required />
                 <input type="email" name="reg_email" placeholder="Email" required />
                 <input type="password" name="reg_password" placeholder="Mật khẩu" required />
                 <button type="submit" name="register">Đăng ký</button>
@@ -134,18 +142,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <form action="login.php" method="POST">
                 <h1>Đăng nhập</h1>
 
-                <?php if ($errors && isset($_POST['login'])): ?>
-                    <p style="color:red; font-weight:600;"><?= htmlspecialchars($errors) ?></p>
-                <?php endif; ?>
+                <?php if ($errors && isset($_POST['login'])) { ?>
+                    <p style="color:red; font-weight:600;"><?php echo htmlspecialchars($errors); ?></p>
+                <?php } ?>
 
                 <div class="social-container">
                     <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
                     <a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
                     <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
                 </div>
-                <span>hoặc sử dụng tài khoản của bạn</span>
+                <span>hoặc sử dụng email của bạn</span>
 
-                <input type="text" name="username" placeholder="Tài khoản" value="<?= htmlspecialchars($username) ?>" required />
+                <input type="email" name="username" placeholder="Email" value="<?php echo htmlspecialchars($username); ?>" required />
                 <input type="password" name="password" placeholder="Mật khẩu" required />
                 <a href="#">Quên mật khẩu?</a>
                 <button type="submit" name="login">Đăng nhập</button>

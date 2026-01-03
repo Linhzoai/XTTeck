@@ -1,7 +1,7 @@
 <?php
-session_start();
-if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] != 1) {
-    header("Location: login.php");
+require_once 'session_config.php';
+if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] != 'admin') {
+    header('Location: login.php');
     exit;
 }
 
@@ -11,44 +11,46 @@ $message = '';
 
 // Xử lý thêm/sửa danh mục
 if (isset($_POST['save_category'])) {
-    $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-    $ten_danhmuc = $conn->real_escape_string($_POST['ten_danhmuc']);
-    
+    $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+    $ten = $conn->real_escape_string($_POST['ten']);
+
     if ($id > 0) {
-        $conn->query("UPDATE danhmuc SET ten_danhmuc='$ten_danhmuc' WHERE id=$id");
+        $conn->query("UPDATE danh_muc SET ten='$ten' WHERE id=$id");
         $message = '<div class="alert alert-success">Cập nhật danh mục thành công!</div>';
     } else {
-        $conn->query("INSERT INTO danhmuc (ten_danhmuc) VALUES ('$ten_danhmuc')");
+        $conn->query("INSERT INTO danh_muc (ten) VALUES ('$ten')");
         $message = '<div class="alert alert-success">Thêm danh mục mới thành công!</div>';
     }
 }
 
 // Xử lý xóa danh mục
 if (isset($_GET['delete'])) {
-    $id = (int)$_GET['delete'];
-    // Kiểm tra xem danh mục có sản phẩm không
-    $check = $conn->query("SELECT COUNT(*) as c FROM sanpham WHERE danhmuc_id=$id")->fetch_assoc()['c'];
-    
+    $id = (int) $_GET['delete'];
+    // Kiểm tra xem danh mục có khóa học không
+    $check_result = $conn->query("SELECT COUNT(*) as c FROM khoa_hoc WHERE id_danh_muc=$id");
+    $check = $check_result ? $check_result->fetch_assoc()['c'] : 0;
+
     if ($check > 0) {
-        $message = '<div class="alert alert-warning">Không thể xóa danh mục này vì còn '.$check.' sản phẩm!</div>';
+        $message = '<div class="alert alert-warning">Không thể xóa danh mục này vì còn '.$check.' khóa học!</div>';
     } else {
-        $conn->query("DELETE FROM danhmuc WHERE id=$id");
+        $conn->query("DELETE FROM danh_muc WHERE id=$id");
         $message = '<div class="alert alert-success">Đã xóa danh mục!</div>';
     }
 }
 
 // Lấy danh sách danh mục
-$categories = $conn->query("SELECT dm.*, COUNT(sp.id) as so_sanpham
-                           FROM danhmuc dm
-                           LEFT JOIN sanpham sp ON dm.id = sp.danhmuc_id
+$categories = $conn->query('SELECT dm.*, COUNT(kh.id) as so_khoa_hoc
+                           FROM danh_muc dm
+                           LEFT JOIN khoa_hoc kh ON dm.id = kh.id_danh_muc
                            GROUP BY dm.id
-                           ORDER BY dm.id ASC");
+                           ORDER BY dm.id ASC');
 
 // Lấy danh mục để sửa
 $edit_category = null;
 if (isset($_GET['edit'])) {
-    $edit_id = (int)$_GET['edit'];
-    $edit_category = $conn->query("SELECT * FROM danhmuc WHERE id=$edit_id")->fetch_assoc();
+    $edit_id = (int) $_GET['edit'];
+    $result = $conn->query("SELECT * FROM danh_muc WHERE id=$edit_id");
+    $edit_category = $result ? $result->fetch_assoc() : null;
 }
 ?>
 
@@ -57,9 +59,10 @@ if (isset($_GET['edit'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Danh mục - XTTech</title>
+    <title>Quản lý Danh mục - CODE4Fun</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/admin-responsive.css">
     <style>
         body { background-color: #f4f6f9; }
         .sidebar {
@@ -96,17 +99,18 @@ if (isset($_GET['edit'])) {
 <!-- Sidebar -->
 <div class="sidebar">
     <div class="sidebar-brand">
-        <h3><i class="fas fa-tools"></i> XTTech</h3>
+        <h3><i class="fas fa-code"></i> CODE4Fun</h3>
         <p>Hệ thống quản trị</p>
     </div>
     <ul class="sidebar-menu">
         <li><a href="master.php"><i class="fas fa-home"></i> Dashboard</a></li>
-        <li><a href="master_sp.php"><i class="fas fa-box"></i> Quản lý sản phẩm</a></li>
-        <li><a href="master_dh.php"><i class="fas fa-shopping-cart"></i> Quản lý đơn hàng</a></li>
-        <li><a href="master_kh.php"><i class="fas fa-users"></i> Quản lý khách hàng</a></li>
+        <li><a href="master_khoahoc.php"><i class="fas fa-book"></i> Quản lý khóa học</a></li>
+        <li><a href="master_dangky.php"><i class="fas fa-user-graduate"></i> Quản lý đăng ký</a></li>
+        <li><a href="master_hocvien.php"><i class="fas fa-users"></i> Quản lý học viên</a></li>
         <li><a href="master_dm.php" class="active"><i class="fas fa-list"></i> Quản lý danh mục</a></li>
-        <li><a href="master_bl.php"><i class="fas fa-comments"></i> Quản lý bình luận</a></li>
-        <li><a href="master_tk.php"><i class="fas fa-chart-bar"></i> Báo cáo thống kê</a></li>
+        <li><a href="master_danhgia.php"><i class="fas fa-star"></i> Quản lý đánh giá</a></li>
+        <li><a href="master_magiamgia.php"><i class="fas fa-tags"></i> Mã giảm giá</a></li>
+        <li><a href="index.php" target="_blank"><i class="fas fa-globe"></i> Xem website</a></li>
     </ul>
 </div>
 
@@ -131,18 +135,18 @@ if (isset($_GET['edit'])) {
                     <input type="hidden" name="id" value="<?php echo $edit_category['id'] ?? ''; ?>">
                     <div class="mb-3">
                         <label class="form-label">Tên danh mục <span class="text-danger">*</span></label>
-                        <input type="text" name="ten_danhmuc" class="form-control" 
-                               value="<?php echo htmlspecialchars($edit_category['ten_danhmuc'] ?? ''); ?>" 
+                        <input type="text" name="ten" class="form-control"
+                               value="<?php echo htmlspecialchars($edit_category['ten'] ?? ''); ?>"
                                placeholder="Nhập tên danh mục..." required>
                     </div>
                     <button type="submit" name="save_category" class="btn btn-primary w-100">
                         <i class="fas fa-save"></i> <?php echo $edit_category ? 'Cập nhật' : 'Thêm mới'; ?>
                     </button>
-                    <?php if ($edit_category): ?>
+                    <?php if ($edit_category) { ?>
                     <a href="master_dm.php" class="btn btn-secondary w-100 mt-2">
                         <i class="fas fa-times"></i> Hủy
                     </a>
-                    <?php endif; ?>
+                    <?php } ?>
                 </form>
             </div>
         </div>
@@ -151,12 +155,12 @@ if (isset($_GET['edit'])) {
         <div class="col-md-8">
             <div class="content-card">
                 <h5 class="mb-4">
-                    <i class="fas fa-list"></i> Danh sách danh mục (<?php echo $categories->num_rows; ?>)
+                    <i class="fas fa-list"></i> Danh sách danh mục (<?php echo $categories ? $categories->num_rows : 0; ?>)
                 </h5>
 
                 <div class="row g-3">
-                    <?php if ($categories->num_rows > 0): ?>
-                        <?php while ($row = $categories->fetch_assoc()): ?>
+                    <?php if ($categories && $categories->num_rows > 0) { ?>
+                        <?php while ($row = $categories->fetch_assoc()) { ?>
                         <div class="col-md-6">
                             <div class="card h-100 border-0 shadow-sm">
                                 <div class="card-body d-flex align-items-center gap-3">
@@ -164,9 +168,9 @@ if (isset($_GET['edit'])) {
                                         <i class="fas fa-folder"></i>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <h6 class="mb-1"><?php echo htmlspecialchars($row['ten_danhmuc']); ?></h6>
+                                        <h6 class="mb-1"><?php echo htmlspecialchars($row['ten']); ?></h6>
                                         <small class="text-muted">
-                                            <i class="fas fa-box"></i> <?php echo $row['so_sanpham']; ?> sản phẩm
+                                            <i class="fas fa-book"></i> <?php echo $row['so_khoa_hoc']; ?> khóa học
                                         </small>
                                     </div>
                                     <div class="btn-group-vertical">
@@ -181,13 +185,13 @@ if (isset($_GET['edit'])) {
                                 </div>
                             </div>
                         </div>
-                        <?php endwhile; ?>
-                    <?php else: ?>
+                        <?php } ?>
+                    <?php } else { ?>
                         <div class="col-12 text-center py-5">
                             <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
                             <p class="text-muted">Chưa có danh mục nào</p>
                         </div>
-                    <?php endif; ?>
+                    <?php } ?>
                 </div>
             </div>
         </div>
@@ -195,6 +199,7 @@ if (isset($_GET['edit'])) {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/admin-mobile.js"></script>
 </body>
 </html>
 

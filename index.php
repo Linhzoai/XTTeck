@@ -1,35 +1,40 @@
 <?php
-session_start();
-
-// Tạo session_id nếu chưa có
-if (!isset($_SESSION['cart_session_id'])) {
-    $_SESSION['cart_session_id'] = session_id();
-}
+// Khởi tạo session
+require_once 'session_config.php';
 
 // Kết nối database
 require_once 'config.php';
 
 // Kiểm tra kết nối
 if ($conn->connect_error) {
-    die("Kết nối thất bại: " . $conn->connect_error);
+    exit('Kết nối thất bại: '.$conn->connect_error);
 }
 
-// Đếm số lượng sản phẩm trong giỏ hàng
-$session_id = $_SESSION['cart_session_id'];
-$cart_count = $conn->query("SELECT SUM(so_luong) as total FROM giohang WHERE session_id='$session_id'")->fetch_assoc()['total'] ?? 0;
-
-// Lấy tối đa 8 sản phẩm
-$sql = "SELECT * FROM sanpham LIMIT 8";
+// Lấy tối đa 8 khóa học nổi bật (đã publish)
+$sql = "SELECT kh.*, dm.ten as ten_danh_muc, nd.ho_ten as ten_giang_vien 
+        FROM khoa_hoc kh 
+        LEFT JOIN danh_muc dm ON kh.id_danh_muc = dm.id
+        LEFT JOIN nguoi_dung nd ON kh.id_giang_vien = nd.id
+        WHERE kh.trang_thai_khoa_hoc = 'publish'
+        ORDER BY kh.ngay_tao DESC
+        LIMIT 8";
 $result = $conn->query($sql);
+
+// Đếm số học viên đã đăng ký
+$students_result = $conn->query('SELECT COUNT(DISTINCT id_nguoi_dung) as total FROM dang_ky');
+$total_students = $students_result ? $students_result->fetch_assoc()['total'] : 0;
+
+$courses_result = $conn->query("SELECT COUNT(*) as total FROM khoa_hoc WHERE trang_thai_khoa_hoc = 'publish'");
+$total_courses = $courses_result ? $courses_result->fetch_assoc()['total'] : 0;
 ?>
 
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XTTech - Trang chủ | Cửa nhôm, uPVC, Cửa kính cao cấp</title>
-    <meta name="description" content="Chuyên cung cấp và thi công cửa nhôm, cửa uPVC, cửa kính cao cấp với chất lượng tốt nhất">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CODE4Fun - Học lập trình thật vui | Khóa học lập trình online chất lượng cao</title>
+    <meta name="description" content="Nền tảng học lập trình online hàng đầu với các khóa học chất lượng cao, giảng viên giàu kinh nghiệm">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -47,7 +52,7 @@ $result = $conn->query($sql);
         <div class="container_main">  
             <nav class="tasbar">
                 <figure>
-                    <img src="img/logo.png" alt="XTTech Logo" class="logo">
+                    <img src="img/logo.png" alt="CODE4Fun Logo" class="logo">
                 </figure>
 
                 <!-- Mobile Menu Toggle -->
@@ -67,45 +72,54 @@ $result = $conn->query($sql);
                     </li>
 
                     <li class="nav_item">
-                        <a href="sanpham.php">Sản phẩm <i class="fa-solid fa-chevron-down" style="font-size: 10px; margin-left: 5px;"></i></a>
+                        <a href="khoahoc.php">Khóa học <i class="fa-solid fa-chevron-down" style="font-size: 10px; margin-left: 5px;"></i></a>
                         <ul class="nav_produte">
-                            <li class="nav_produte-item"><a href="sanpham.php?danhmuc_id=1">Cửa nhôm</a></li>
-                            <li class="nav_produte-item"><a href="sanpham.php?danhmuc_id=2">Cửa uPVC</a></li>
-                            <li class="nav_produte-item"><a href="sanpham.php?danhmuc_id=3">Cửa gỗ</a></li>
-                            <li class="nav_produte-item"><a href="sanpham.php?danhmuc_id=4">Cửa cuốn</a></li>
-                            <li class="nav_produte-item"><a href="sanpham.php?danhmuc_id=5">Cửa tự động</a></li>
-                            <li class="nav_produte-item"><a href="sanpham.php?danhmuc_id=6">Sản phẩm kính</a></li>
-                            <li class="nav_produte-item"><a href="sanpham.php?danhmuc_id=7">Hệ thống thông minh</a></li>
+                            <li class="nav_produte-item"><a href="khoahoc.php?danh_muc=1">Lập trình Web</a></li>
+                            <li class="nav_produte-item"><a href="khoahoc.php?danh_muc=2">Lập trình Mobile</a></li>
+                            <li class="nav_produte-item"><a href="khoahoc.php?danh_muc=3">Lập trình Backend</a></li>
+                            <li class="nav_produte-item"><a href="khoahoc.php?danh_muc=4">Data Science</a></li>
+                            <li class="nav_produte-item"><a href="khoahoc.php?danh_muc=5">DevOps</a></li>
                         </ul>
                     </li>
 
                     <li class="nav_item">
-                        <a href="tintuc.php">Tin tức <i class="fa-solid fa-chevron-down" style="font-size: 10px; margin-left: 5px;"></i></a>
+                        <a href="blog.php">Blog <i class="fa-solid fa-chevron-down" style="font-size: 10px; margin-left: 5px;"></i></a>
                         <ul class="nav_produte">
-                            <li class="nav_produte-item"><a href="tintuc.php?cat=thitruong">Tin tức thị trường</a></li>
-                            <li class="nav_produte-item"><a href="tintuc.php?cat=tuvan">Góc tư vấn</a></li>
+                            <li class="nav_produte-item"><a href="blog.php?cat=tips">Tips & Tricks</a></li>
+                            <li class="nav_produte-item"><a href="blog.php?cat=career">Lộ trình sự nghiệp</a></li>
                         </ul>
                     </li>
 
-                    <li class="nav_item"><a href="video.php">Video</a></li>
-                    <li class="nav_item"><a href="duan.php">Dự án</a></li>
-                    <li class="nav_item"><a href="lienhe.php">Liên hệ báo giá</a></li>
+                    <li class="nav_item"><a href="lienhe.php">Liên hệ</a></li>
 
                     <li class="nav_item search_box">
-                        <form action="sanpham.php" method="get">
-                            <input type="text" name="keyword" placeholder="Nhập từ khóa..." aria-label="Tìm kiếm sản phẩm">
+                        <button type="button" class="search_toggle" aria-label="Mở tìm kiếm">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                        <form action="khoahoc.php" method="get" class="search_form">
+                            <input type="text" name="keyword" placeholder="Tìm khóa học..." aria-label="Tìm kiếm khóa học">
                         </form>
                     </li>
 
-                    <!-- Icon giỏ hàng -->
-                    <li class="nav_item cart-icon">
-                        <a href="giohang.php" title="Giỏ hàng">
-                            <i class="fa-solid fa-shopping-cart"></i>
-                            <?php if ($cart_count > 0): ?>
-                                <span class="cart-badge"><?= $cart_count; ?></span>
-                            <?php endif; ?>
+                    <!-- User Icon -->
+                    <?php if (isset($_SESSION['user_id'])) { ?>
+                    <li class="nav_item">
+                        <a href="khoahoc_cua_toi.php" title="Khóa học của tôi">
+                            <i class="fa-solid fa-user"></i>
                         </a>
                     </li>
+                    <li class="nav_item">
+                        <a href="logout.php" title="Đăng xuất">
+                            <i class="fa-solid fa-sign-out-alt"></i>
+                        </a>
+                    </li>
+                    <?php } else { ?>
+                    <li class="nav_item">
+                        <a href="login.php" title="Đăng nhập">
+                            <i class="fa-solid fa-sign-in-alt"></i> Đăng nhập
+                        </a>
+                    </li>
+                    <?php } ?>
                 </ul>
             </nav>
         </div>
@@ -120,20 +134,20 @@ $result = $conn->query($sql);
                     <i class="fa-solid fa-chevron-left"></i>
                 </button>
                 <div class="preview_img">
-                    <img src="img/cua1.jpg" alt="Cửa nhôm cao cấp XTTech" class="preview_img-item active">
-                    <img src="img/cua2.jpg" alt="Cửa uPVC chất lượng cao" class="preview_img-item">
-                    <img src="img/cua3.jpg" alt="Sản phẩm cửa kính hiện đại" class="preview_img-item">
+                    <img src="img/1759758142_guy-lesson 1.png" alt="Học lập trình cùng CODE4Fun" class="preview_img-item active">
+                    <img src="img/1759758154_study2.jpg" alt="Khóa học chất lượng cao" class="preview_img-item">
+                    <img src="img/1759758164_study3.jpg" alt="Giảng viên giàu kinh nghiệm" class="preview_img-item">
                 </div>
                 <button class="slider-button next-button" aria-label="Next slide">
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
-                
+
                 <!-- Hero Content Overlay -->
                 <div class="hero-content">
-                    <h1 class="hero-title">Giải Pháp Cửa Hoàn Hảo Cho Ngôi Nhà Bạn</h1>
-                    <p class="hero-subtitle">Chất lượng châu Âu - Giá cả cạnh tranh - Dịch vụ chuyên nghiệp</p>
+                    <h1 class="hero-title">Học Lập Trình Thật Vui Cùng CODE4Fun</h1>
+                    <p class="hero-subtitle">Khóa học chất lượng cao - Giảng viên giàu kinh nghiệm - Học phí hợp lý</p>
                     <div class="hero-buttons">
-                        <a href="sanpham.php" class="hero-btn primary">Xem sản phẩm</a>
+                        <a href="khoahoc.php" class="hero-btn primary">Khám phá khóa học</a>
                         <a href="lienhe.php" class="hero-btn secondary">Liên hệ tư vấn</a>
                     </div>
                 </div>
@@ -146,31 +160,31 @@ $result = $conn->query($sql);
                 <div class="stats-grid">
                     <div class="stat-item">
                         <div class="stat-icon">
-                            <i class="fa-solid fa-trophy"></i>
+                            <i class="fa-solid fa-graduation-cap"></i>
                         </div>
-                        <h3 class="stat-number">15+</h3>
-                        <p class="stat-label">Năm kinh nghiệm</p>
+                        <h3 class="stat-number"><?php echo $total_students; ?>+</h3>
+                        <p class="stat-label">Học viên</p>
                     </div>
                     <div class="stat-item">
                         <div class="stat-icon">
-                            <i class="fa-solid fa-users"></i>
+                            <i class="fa-solid fa-book"></i>
                         </div>
-                        <h3 class="stat-number">5000+</h3>
-                        <p class="stat-label">Khách hàng tin tưởng</p>
+                        <h3 class="stat-number"><?php echo $total_courses; ?>+</h3>
+                        <p class="stat-label">Khóa học</p>
                     </div>
                     <div class="stat-item">
                         <div class="stat-icon">
-                            <i class="fa-solid fa-building"></i>
+                            <i class="fa-solid fa-chalkboard-teacher"></i>
                         </div>
-                        <h3 class="stat-number">3000+</h3>
-                        <p class="stat-label">Dự án hoàn thành</p>
+                        <h3 class="stat-number">50+</h3>
+                        <p class="stat-label">Giảng viên</p>
                     </div>
                     <div class="stat-item">
                         <div class="stat-icon">
                             <i class="fa-solid fa-star"></i>
                         </div>
-                        <h3 class="stat-number">100%</h3>
-                        <p class="stat-label">Cam kết chất lượng</p>
+                        <h3 class="stat-number">4.8/5</h3>
+                        <p class="stat-label">Đánh giá trung bình</p>
                     </div>
                 </div>
             </div>
@@ -181,49 +195,52 @@ $result = $conn->query($sql);
             <div class="container_main">
                 <div class="hotline-content">
                     <i class="fa-solid fa-phone-volume"></i>
-                    <span>Hotline kinh doanh:</span>
+                    <span>Hotline tư vấn:</span>
                     <strong>+84 012 345 678</strong>
                     <a href="tel:+84012345678" class="hotline-btn">Gọi ngay</a>
                 </div>
             </div>
         </div>
 
-        <!-- Sản phẩm -->
+        <!-- Khóa học nổi bật -->
         <div class="produce">
             <div class="container_main">
                 <div class="produce_body">
-                    <h2 class="produce_heading">SẢN PHẨM CỦA CHÚNG TÔI</h2>
-                    <p class="section-subtitle">Khám phá bộ sưu tập cửa cao cấp với thiết kế hiện đại và chất lượng vượt trội</p>
+                    <h2 class="produce_heading">KHÓA HỌC NỔI BẬT</h2>
+                    <p class="section-subtitle">Khám phá các khóa học lập trình chất lượng cao với giảng viên giàu kinh nghiệm</p>
 
                     <div class="produce_list">
-                        <?php if ($result && $result->num_rows > 0): ?>
-                            <?php while ($row = $result->fetch_assoc()): ?>
-                                <a href="thongtinsanpham.php?id=<?= $row['id']; ?>" class="produce_link">
+                        <?php if ($result && $result->num_rows > 0) { ?>
+                            <?php while ($row = $result->fetch_assoc()) { ?>
+                                <a href="chitietkhoahoc.php?id=<?php echo $row['id']; ?>" class="produce_link">
                                     <div class="produce_item">
                                         <div class="product-badge">Mới</div>
                                         <figure>
-                                            <img src="<?= htmlspecialchars($row['hinh_anh']); ?>" 
-                                                 alt="<?= htmlspecialchars($row['ten_sanpham']); ?>" 
+                                            <img src="<?php echo htmlspecialchars($row['hinh_anh'] ?? 'img/default-course.svg'); ?>"
+                                                 alt="<?php echo htmlspecialchars($row['ten']); ?>"
                                                  class="produce_img"
                                                  loading="lazy">
                                         </figure>
-                                        <h3 class="produce_title"><?= htmlspecialchars($row['ten_sanpham']); ?></h3>
-                                        <p class="produce_price"><?= number_format($row['gia']); ?>₫</p>
+                                        <h3 class="produce_title"><?php echo htmlspecialchars($row['ten']); ?></h3>
+                                        <p class="course-instructor">
+                                            <i class="fa-solid fa-user"></i> <?php echo htmlspecialchars($row['ten_giang_vien'] ?? 'Giảng viên'); ?>
+                                        </p>
+                                        <p class="produce_price"><?php echo number_format($row['gia']); ?>₫</p>
                                         <div class="product-actions">
                                             <button class="quick-view-btn">
-                                                <i class="fa-solid fa-eye"></i> Xem nhanh
+                                                <i class="fa-solid fa-eye"></i> Xem chi tiết
                                             </button>
                                         </div>
                                     </div>
                                 </a>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <p style="text-align: center; width: 100%; padding: 40px 0; color: #666;">Hiện chưa có sản phẩm nào.</p>
-                        <?php endif; ?>
+                            <?php } ?>
+                        <?php } else { ?>
+                            <p style="text-align: center; width: 100%; padding: 40px 0; color: #666;">Hiện chưa có khóa học nào.</p>
+                        <?php } ?>
                     </div>
 
                     <div class="see_all">
-                        <a href="sanpham.php" class="btn_see_all">Xem tất cả sản phẩm <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i></a>
+                        <a href="khoahoc.php" class="btn_see_all">Xem tất cả khóa học <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i></a>
                     </div>
                 </div>
             </div>
@@ -232,37 +249,37 @@ $result = $conn->query($sql);
         <!-- Why Choose Us -->
         <section class="why-choose">
             <div class="container_main">
-                <h2 class="produce_heading">TẠI SAO CHỌN CHÚNG TÔI?</h2>
-                <p class="section-subtitle">Cam kết mang đến những giá trị tốt nhất cho khách hàng</p>
-                
+                <h2 class="produce_heading">TẠI SAO CHỌN CODE4FUN?</h2>
+                <p class="section-subtitle">Cam kết mang đến trải nghiệm học tập tốt nhất cho học viên</p>
+
                 <div class="why-grid">
                     <div class="why-item">
                         <div class="why-icon">
-                            <i class="fa-solid fa-shield-halved"></i>
+                            <i class="fa-solid fa-laptop-code"></i>
                         </div>
-                        <h3>Bảo hành dài hạn</h3>
-                        <p>Bảo hành 10 năm cho sản phẩm, 2 năm cho phụ kiện</p>
-                    </div>
-                    <div class="why-item">
-                        <div class="why-icon">
-                            <i class="fa-solid fa-truck-fast"></i>
-                        </div>
-                        <h3>Giao hàng nhanh chóng</h3>
-                        <p>Vận chuyển và lắp đặt trong vòng 7-14 ngày</p>
+                        <h3>Học mọi lúc mọi nơi</h3>
+                        <p>Truy cập khóa học 24/7, học theo tiến độ của bạn</p>
                     </div>
                     <div class="why-item">
                         <div class="why-icon">
                             <i class="fa-solid fa-certificate"></i>
                         </div>
-                        <h3>Chất lượng đảm bảo</h3>
-                        <p>Sản phẩm đạt chuẩn quốc tế ISO 9001:2015</p>
+                        <h3>Chứng chỉ hoàn thành</h3>
+                        <p>Nhận chứng chỉ sau khi hoàn thành khóa học</p>
                     </div>
                     <div class="why-item">
                         <div class="why-icon">
-                            <i class="fa-solid fa-money-bill-trend-up"></i>
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <h3>Cộng đồng hỗ trợ</h3>
+                        <p>Tham gia cộng đồng học viên sôi động</p>
+                    </div>
+                    <div class="why-item">
+                        <div class="why-icon">
+                            <i class="fa-solid fa-hand-holding-dollar"></i>
                         </div>
                         <h3>Giá cả hợp lý</h3>
-                        <p>Cam kết giá tốt nhất thị trường</p>
+                        <p>Học phí phải chăng, nhiều ưu đãi hấp dẫn</p>
                     </div>
                 </div>
             </div>
@@ -272,42 +289,42 @@ $result = $conn->query($sql);
         <div class="about" id="about">
             <div class="container_main">
                 <div class="about_body">
-                    <h2 class="produce_heading">VỀ CHÚNG TÔI</h2>
-                    <p>Chúng tôi tự hào là nhà Tư vấn – Thiết kế – Thi công Nội thất nhôm, Cửa kỹ thuật, Sàn cuộn Vinyl, Cửa ngăn cháy, Thanh tay vịn cho hành lang bệnh viện, Ốp nhôm Aluminum. Chúng tôi luôn nỗ lực hết mình để làm hài lòng khách hàng, để mang đến cho khách hàng những sản phẩm tốt nhất. Sức mạnh của công ty thể hiện ở đội ngũ nhân lực với các kỹ sư giàu kinh nghiệm và công nhân lắp đặt có trình độ tay nghề cao, kết hợp với sự chính xác của máy móc trong quá trình cắt xẻ nhôm.</p>
-                    
+                    <h2 class="produce_heading">VỀ CODE4FUN</h2>
+                    <p>CODE4Fun là nền tảng học lập trình online hàng đầu Việt Nam, cung cấp các khóa học chất lượng cao với giảng viên giàu kinh nghiệm. Chúng tôi cam kết mang đến cho học viên những kiến thức thực tế nhất, giúp bạn tự tin bước vào thế giới lập trình và phát triển sự nghiệp IT.</p>
+
                     <div class="About_list">
                         <!-- Cột 1 -->
                         <div class="about_item">
                             <div class="about_col">
                                 <figure>
-                                    <i class="fa-solid fa-gift"></i>
+                                    <i class="fa-solid fa-book-open"></i>
                                 </figure>
-                                <h3 class="section_heading-lv2">CHƯƠNG TRÌNH KHUYẾN MÃI</h3>
-                                <p class="section_desc">Chương trình "Đầu tư xứng tầm – Ưu đãi cực phẩm" dành cho khách hàng sử dụng sản phẩm XTTech. Nhận ngay ưu đãi hấp dẫn khi đặt hàng trong thời gian khuyến mãi.</p>
+                                <h3 class="section_heading-lv2">Nội dung cập nhật</h3>
+                                <p class="section_desc">Khóa học được cập nhật liên tục theo xu hướng công nghệ mới nhất, đảm bảo kiến thức luôn thực tế và hữu ích.</p>
                             </div>
 
                             <div class="about_col">
                                 <figure>
-                                    <i class="fa-regular fa-hourglass-half"></i>
+                                    <i class="fa-solid fa-chalkboard-teacher"></i>
                                 </figure>
-                                <h3 class="section_heading-lv2">Tiết Kiệm Thời Gian</h3>
-                                <p class="section_desc">Khách hàng sẽ không phải chờ đợi quá lâu. Chúng tôi sẽ ngay lập tức đo đạc và tiến hành thi công ngay lập tức, không làm mất thời gian của khách hàng.</p>
+                                <h3 class="section_heading-lv2">Giảng viên chuyên nghiệp</h3>
+                                <p class="section_desc">Đội ngũ giảng viên giàu kinh nghiệm thực tế, nhiệt tình hướng dẫn và hỗ trợ học viên.</p>
                             </div>
 
                             <div class="about_col">
                                 <figure>
-                                    <i class="fa-solid fa-handshake"></i>
+                                    <i class="fa-solid fa-project-diagram"></i>
                                 </figure>
-                                <h3 class="section_heading-lv2">Đảm Bảo Uy Tín</h3>
-                                <p class="section_desc">Với phương châm uy tín, chất lượng và đặt lợi ích của khách hàng lên trên hết, quý khách có thể an tâm về chất lượng dịch vụ của Công ty chúng tôi.</p>
+                                <h3 class="section_heading-lv2">Dự án thực tế</h3>
+                                <p class="section_desc">Học qua các dự án thực tế, giúp bạn áp dụng kiến thức vào công việc ngay lập tức.</p>
                             </div>
 
                             <div class="about_col">
                                 <figure>
                                     <i class="fa-solid fa-headset"></i>
                                 </figure>
-                                <h3 class="section_heading-lv2">Hỗ Trợ 24/7</h3>
-                                <p class="section_desc">Luôn sẵn sàng hỗ trợ quý khách hàng tại mọi nơi mọi lúc, giúp khách hàng chủ động được thời gian quý báu.</p>
+                                <h3 class="section_heading-lv2">Hỗ trợ 24/7</h3>
+                                <p class="section_desc">Đội ngũ hỗ trợ luôn sẵn sàng giải đáp thắc mắc của bạn mọi lúc mọi nơi.</p>
                             </div>
                         </div>
 
@@ -315,29 +332,29 @@ $result = $conn->query($sql);
                         <div class="about_item">
                             <div class="about_col">
                                 <figure>
-                                    <i class="fa-solid fa-ranking-star"></i>
+                                    <i class="fa-solid fa-code"></i>
                                 </figure>
-                                <h3 class="section_heading-lv2">Chất Lượng Sản Phẩm</h3>
-                                <p class="section_desc">Tiên phong đưa cửa hiện đại uPVC tiêu chuẩn Châu Âu vào thị trường trong nước, làm nên cuộc cách mạng về cửa và mở ra "kỷ nguyên mới" cho ngôi nhà của bạn.</p>
+                                <h3 class="section_heading-lv2">Thực hành nhiều</h3>
+                                <p class="section_desc">Tập trung vào thực hành, coding thực tế để nắm vững kiến thức và kỹ năng lập trình.</p>
                             </div>
 
                             <div class="about_col">
                                 <figure>
-                                    <i class="fa-solid fa-piggy-bank"></i>
+                                    <i class="fa-solid fa-trophy"></i>
                                 </figure>
-                                <h3 class="section_heading-lv2">Tiết Kiệm Chi Phí Hợp Lý</h3>
-                                <p class="section_desc">Cam kết là một trong những đơn vị cung cấp và thi công với giá cả cạnh tranh nhất. Chất lượng cao - Giá thành tốt - Dịch vụ chuyên nghiệp.</p>
+                                <h3 class="section_heading-lv2">Chứng chỉ uy tín</h3>
+                                <p class="section_desc">Chứng chỉ hoàn thành khóa học được công nhận, giúp bạn nâng cao giá trị bản thân.</p>
                             </div>
 
                             <div class="about_col">
                                 <figure>
-                                    <i class="fa-solid fa-person"></i>
+                                    <i class="fa-solid fa-users-gear"></i>
                                 </figure>
-                                <h3 class="section_heading-lv2">Nhân Viên Chuyên Nghiệp</h3>
-                                <p class="section_desc">Đội ngũ kỹ sư có độ chuyên môn cao và áp dụng máy móc tiên tiến nhất hiện nay vào thiết kế, thi công công trình.</p>
+                                <h3 class="section_heading-lv2">Cộng đồng sôi động</h3>
+                                <p class="section_desc">Tham gia cộng đồng học viên đông đảo, cùng nhau học hỏi và phát triển.</p>
                             </div>
                         </div>
-                    </div>      
+                    </div>
                 </div>
             </div>
         </div>
@@ -345,9 +362,9 @@ $result = $conn->query($sql);
         <!-- Testimonials Section -->
         <section class="testimonials">
             <div class="container_main">
-                <h2 class="produce_heading">KHÁCH HÀNG NÓI GÌ VỀ CHÚNG TÔI</h2>
-                <p class="section-subtitle">Những đánh giá chân thực từ khách hàng</p>
-                
+                <h2 class="produce_heading">HỌC VIÊN NÓI GÌ VỀ CHÚNG TÔI</h2>
+                <p class="section-subtitle">Những đánh giá chân thực từ học viên</p>
+
                 <div class="testimonial-grid">
                     <div class="testimonial-item">
                         <div class="testimonial-stars">
@@ -357,10 +374,10 @@ $result = $conn->query($sql);
                             <i class="fa-solid fa-star"></i>
                             <i class="fa-solid fa-star"></i>
                         </div>
-                        <p class="testimonial-text">"Sản phẩm chất lượng tuyệt vời, đội ngũ thi công chuyên nghiệp. Tôi rất hài lòng với cửa nhôm mà XTTech lắp đặt cho nhà tôi."</p>
+                        <p class="testimonial-text">"Khóa học rất chất lượng, giảng viên nhiệt tình. Sau khóa học tôi đã tự tin xin được việc làm lập trình viên."</p>
                         <div class="testimonial-author">
-                            <strong>Anh Minh</strong>
-                            <span>Hải Phòng</span>
+                            <strong>Nguyễn Văn A</strong>
+                            <span>Học viên khóa Web Development</span>
                         </div>
                     </div>
                     <div class="testimonial-item">
@@ -371,10 +388,10 @@ $result = $conn->query($sql);
                             <i class="fa-solid fa-star"></i>
                             <i class="fa-solid fa-star"></i>
                         </div>
-                        <p class="testimonial-text">"Giá cả hợp lý, tư vấn nhiệt tình. Cửa uPVC của công ty rất đẹp và bền. Tôi sẽ giới thiệu cho bạn bè."</p>
+                        <p class="testimonial-text">"Nội dung cập nhật, bài tập thực tế. Tôi rất hài lòng với CODE4Fun và sẽ tiếp tục học các khóa khác."</p>
                         <div class="testimonial-author">
-                            <strong>Chị Hoa</strong>
-                            <span>Hà Nội</span>
+                            <strong>Trần Thị B</strong>
+                            <span>Học viên khóa Mobile Development</span>
                         </div>
                     </div>
                     <div class="testimonial-item">
@@ -385,10 +402,10 @@ $result = $conn->query($sql);
                             <i class="fa-solid fa-star"></i>
                             <i class="fa-solid fa-star"></i>
                         </div>
-                        <p class="testimonial-text">"Dịch vụ tốt, lắp đặt nhanh chóng. Cửa kính của XTTech làm cho căn hộ của tôi trở nên sang trọng hơn rất nhiều."</p>
+                        <p class="testimonial-text">"Giá cả hợp lý, chất lượng tuyệt vời. Đội ngũ hỗ trợ rất nhiệt tình, giải đáp mọi thắc mắc của tôi."</p>
                         <div class="testimonial-author">
-                            <strong>Anh Tuấn</strong>
-                            <span>TP. HCM</span>
+                            <strong>Lê Văn C</strong>
+                            <span>Học viên khóa Backend Development</span>
                         </div>
                     </div>
                 </div>
@@ -399,10 +416,10 @@ $result = $conn->query($sql);
         <section class="cta-section">
             <div class="container_main">
                 <div class="cta-content">
-                    <h2>Bạn Cần Tư Vấn Về Sản Phẩm?</h2>
-                    <p>Đội ngũ chuyên gia của chúng tôi luôn sẵn sàng hỗ trợ bạn</p>
+                    <h2>Bạn Muốn Bắt Đầu Học Lập Trình?</h2>
+                    <p>Đội ngũ tư vấn của chúng tôi luôn sẵn sàng hỗ trợ bạn</p>
                     <div class="cta-buttons">
-                        <a href="lienhe.php" class="cta-btn primary">Liên hệ ngay</a>
+                        <a href="khoahoc.php" class="cta-btn primary">Khám phá khóa học</a>
                         <a href="tel:+84012345678" class="cta-btn secondary">
                             <i class="fa-solid fa-phone"></i> +84 012 345 678
                         </a>
@@ -418,14 +435,14 @@ $result = $conn->query($sql);
             <div class="footer__top">
                 <div class="footer__column">
                     <div class="company">
-                        <img src="img/logo.png" alt="XTTech Logo" class="company--logo">
-                        <h3 style="font-size: 24px; font-weight: 800; color: white;">XTTech</h3>
+                        <img src="img/logo.png" alt="CODE4Fun Logo" class="company--logo">
+                        <h3 style="font-size: 24px; font-weight: 800; color: white;">CODE4Fun</h3>
                     </div>
                     <p class="footer__desc">
-                        Chúng tôi tự hào mang đến những sản phẩm cửa chất lượng cao, thiết kế hiện đại và dịch vụ chuyên nghiệp cho mọi công trình.
+                        Nền tảng học lập trình online hàng đầu Việt Nam, cung cấp các khóa học chất lượng cao với giảng viên giàu kinh nghiệm.
                     </p>
                 </div>
-                
+
                 <div class="footer__column">
                     <h3 class="footer__heading">Hỗ trợ</h3>
                     <ul class="footer__list">
@@ -445,34 +462,34 @@ $result = $conn->query($sql);
                     <h3 class="footer__heading">Chính sách</h3>
                     <ul class="footer__list">
                         <li class="footer__item">
-                            <a href="baohanh.php" class="footer__link">Bảo hành</a>
+                            <a href="chinhsach.php" class="footer__link">Chính sách hoàn tiền</a>
                         </li>
                         <li class="footer__item">
-                            <a href="doitra.php" class="footer__link">Đổi trả</a>
+                            <a href="dieukho an.php" class="footer__link">Điều khoản sử dụng</a>
                         </li>
                     </ul>
                 </div>
 
                 <div class="footer__column">
-                    <h3 class="footer__heading">Sản phẩm</h3>
+                    <h3 class="footer__heading">Khóa học</h3>
                     <ul class="footer__list">
                         <li class="footer__item">
-                            <a href="sanpham.php?danhmuc_id=1" class="footer__link">Cửa nhôm</a>
+                            <a href="khoahoc.php?danh_muc=1" class="footer__link">Lập trình Web</a>
                         </li>
                         <li class="footer__item">
-                            <a href="sanpham.php?danhmuc_id=2" class="footer__link">Cửa uPVC</a>
+                            <a href="khoahoc.php?danh_muc=2" class="footer__link">Lập trình Mobile</a>
                         </li>
                         <li class="footer__item">
-                            <a href="sanpham.php?danhmuc_id=3" class="footer__link">Cửa gỗ</a>
+                            <a href="khoahoc.php?danh_muc=3" class="footer__link">Lập trình Backend</a>
                         </li>
                         <li class="footer__item">
-                            <a href="sanpham.php?danhmuc_id=4" class="footer__link">Cửa cuốn</a>
+                            <a href="khoahoc.php?danh_muc=4" class="footer__link">Data Science</a>
                         </li>
                     </ul>
-                    <h3 class="footer__heading">Dự án</h3>
+                    <h3 class="footer__heading">Tài nguyên</h3>
                     <ul class="footer__list">
                         <li class="footer__item">
-                            <a href="#!" class="footer__link">Dự án tiêu biểu</a>
+                            <a href="blog.php" class="footer__link">Blog</a>
                         </li>
                     </ul>
                 </div>
@@ -495,7 +512,7 @@ $result = $conn->query($sql);
                     </div>
                     <h3 class="footer__heading">Đăng ký nhận tin</h3>
                     <p class="footer__desc">
-                        Đăng ký để nhận thông tin cập nhật mới nhất về sản phẩm và chương trình khuyến mãi
+                        Đăng ký để nhận thông tin cập nhật mới nhất về khóa học và chương trình khuyến mãi
                     </p>
                     <form class="footer__form" action="#!">
                         <input type="email" class="footer__form-input" placeholder="Nhập email của bạn..." required aria-label="Email">
@@ -503,9 +520,9 @@ $result = $conn->query($sql);
                     </form>
                 </div>
             </div>
-            
+
             <div class="footer__copy">
-                <p class="footer__copy-desc">© 2025 - XTTech. Bản quyền thuộc về Công ty. Thiết kế bởi Nguyễn Quang Linh</p>
+                <p class="footer__copy-desc">© 2025 - CODE4Fun. Bản quyền thuộc về Công ty. Thiết kế bởi Nguyễn Quang Linh</p>
             </div>
         </div>
     </footer>

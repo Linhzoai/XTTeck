@@ -1,0 +1,188 @@
+/* ========== ADMIN RESPONSIVE STYLES ========== */
+
+/* Tablet and below */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 220px;
+    }
+
+    .main-content {
+        margin-left: 220px;
+        padding: 20px;
+    }
+
+    .sidebar-brand h3 {
+        font-size: 20px;
+    }
+
+    .sidebar-menu a {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+
+    .stat-card {
+        margin-bottom: 15px;
+    }
+}
+
+/* Mobile - Hide sidebar by default, show hamburger menu */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        width: 260px;
+        transition: left 0.3s ease;
+        z-index: 2000;
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 15px;
+        width: 100%;
+    }
+
+    /* Mobile menu toggle button */
+    .mobile-menu-btn {
+        display: block;
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 1500;
+        background: linear-gradient(135deg, #2f74d5, #1a5bb8);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .mobile-menu-btn i {
+        font-size: 20px;
+    }
+
+    /* Overlay when sidebar is open */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1500;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    /* Adjust content spacing */
+    .main-content h2 {
+        font-size: 24px;
+        margin-top: 50px;
+    }
+
+    /* Stats grid - 2 columns on mobile */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .stat-card {
+        padding: 15px;
+    }
+
+    .stat-number {
+        font-size: 24px;
+    }
+
+    .stat-label {
+        font-size: 12px;
+    }
+
+    /* Tables - make scrollable */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 600px;
+    }
+
+    /* Forms - full width */
+    .content-card {
+        padding: 20px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+    /* Chart container */
+    .chart-container {
+        height: 250px !important;
+    }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+    .main-content {
+        padding: 10px;
+    }
+
+    .main-content h2 {
+        font-size: 20px;
+    }
+
+    /* Stats grid - 1 column on small mobile */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .stat-card {
+        padding: 12px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+
+    .stat-number {
+        font-size: 20px;
+    }
+
+    .stat-label {
+        font-size: 11px;
+    }
+
+    /* Buttons - smaller */
+    .btn {
+        padding: 8px 15px;
+        font-size: 13px;
+    }
+
+    /* Form inputs */
+    .form-control, .form-select {
+        font-size: 14px;
+    }
+
+    /* Cards */
+    .content-card {
+        padding: 15px;
+    }
+
+    .content-card h5 {
+        font-size: 16px;
+    }
+}
+
